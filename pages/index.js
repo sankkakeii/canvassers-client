@@ -320,8 +320,8 @@ const renderAuthForm = () => (
 );
 
 return (
-  <div className="flex flex-col items-center justify-center w-full h-screen px-4 gap-6 sm:flex-row sm:px-0">
-    <div className="max-w-sm w-full bg-white rounded-md shadow-md overflow-hidden">
+  <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-800 p-4 gap-6 sm:flex-row">
+    <div className="max-w-sm w-full bg-white rounded-md shadow-md overflow-y-auto">
       <div className="px-6 py-4 bg-gray-900 text-white">
         <h1 className="text-lg font-bold text-center">Canvasser Tracking App</h1>
       </div>
