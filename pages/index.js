@@ -250,49 +250,69 @@ const CanvasserApp = () => {
 
 const renderAuthForm = () => (
   <form onSubmit={isRegistering ? handleRegister : handleSignIn} className="mb-4">
-    <input
-      type="email"
-      name="email"
-      value={formData.email}
-      onChange={handleInputChange}
-      placeholder="Email Address"
-      className="mt-2 p-2 w-full border rounded"
-      required
-    />
-    <input
-      type="password"
-      name="password"
-      value={formData.password}
-      onChange={handleInputChange}
-      placeholder="Password"
-      className="mt-2 p-2 w-full border rounded"
-      required
-    />
+    <div className="mb-4">
+      <label className="block text-gray-700 font-bold mb-2" htmlFor="email">
+        Email Address
+      </label>
+      <input
+        type="email"
+        name="email"
+        value={formData.email}
+        onChange={handleInputChange}
+        placeholder="Email Address"
+        className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        required
+      />
+    </div>
+    <div className="mb-4">
+      <label className="block text-gray-700 font-bold mb-2" htmlFor="password">
+        Password
+      </label>
+      <input
+        type="password"
+        name="password"
+        value={formData.password}
+        onChange={handleInputChange}
+        placeholder="Password"
+        className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        required
+      />
+    </div>
     {isRegistering && (
       <>
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          placeholder="Full Name"
-          className="mt-2 p-2 w-full border rounded"
-          required
-        />
-        <input
-          type="tel"
-          name="phone"
-          value={formData.phone}
-          onChange={handleInputChange}
-          placeholder="Phone Number"
-          className="mt-2 p-2 w-full border rounded"
-          required
-        />
+        <div className="mb-4">
+          <label className="block text-gray-700 font-bold mb-2" htmlFor="name">
+            Full Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            placeholder="Full Name"
+            className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700 font-bold mb-2" htmlFor="phone">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder="Phone Number"
+            className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
       </>
     )}
     <button
       type="submit"
-      className="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+      className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline"
     >
       {isRegistering ? 'Register' : 'Sign In'}
     </button>
@@ -301,104 +321,126 @@ const renderAuthForm = () => (
 
 return (
   <div className="flex flex-col items-center justify-center w-full h-screen px-4 gap-6 sm:flex-row sm:px-0">
-    <div className="p-6 w-full sm:w-1/2 bg-white rounded-xl shadow-md">
-      <h1 className="text-2xl font-bold mb-4 text-center">Canvasser Tracking App</h1>
+    <div className="max-w-sm w-full bg-white rounded-md shadow-md overflow-hidden">
+      <div className="px-6 py-4 bg-gray-900 text-white">
+        <h1 className="text-lg font-bold text-center">Canvasser Tracking App</h1>
+      </div>
 
-      {message && (
-        <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
-          {message}
-        </div>
-      )}
+      <div className="px-6 py-4">
+        {message && (
+          <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
+            {message}
+          </div>
+        )}
 
-      {!user ? (
-        <>
-          {renderAuthForm()}
-          <button
-            onClick={() => setIsRegistering(!isRegistering)}
-            className="mt-2 w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
-          >
-            {isRegistering ? 'Already have an account? Sign In' : 'New user? Register'}
-          </button>
-        </>
-      ) : !isCheckedIn ? (
-        <button
-          onClick={handleCheckIn}
-          className="mt-2 w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-          disabled={!location}
-        >
-          {location ? 'Check In' : 'Getting location...'}
-        </button>
-      ) : (
-        <>
-          <form onSubmit={handleSaleSubmit} className="mb-4">
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Customer Name"
-              className="mt-2 p-2 w-full border rounded"
-              required
-            />
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              placeholder="Phone Number"
-              className="mt-2 p-2 w-full border rounded"
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="Email Address"
-              className="mt-2 p-2 w-full border rounded"
-              required
-            />
-            <input
-              type="text"
-              name="deviceModel"
-              value={formData.deviceModel}
-              onChange={handleInputChange}
-              placeholder="Device Model"
-              className="mt-2 p-2 w-full border rounded"
-              required
-            />
+        {!user ? (
+          <>
+            {renderAuthForm()}
             <button
-              type="submit"
-              className="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+              onClick={() => setIsRegistering(!isRegistering)}
+              className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-full mt-4 focus:outline-none focus:shadow-outline"
             >
-              Record Sale
+              {isRegistering ? 'Already have an account? Sign In' : 'New user? Register'}
             </button>
-          </form>
-
+          </>
+        ) : !isCheckedIn ? (
           <button
-            onClick={handleCheckOut}
-            className="mt-2 w-full bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+            onClick={handleCheckIn}
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full mt-4 focus:outline-none focus:shadow-outline"
+            disabled={!location}
           >
-            Check Out
+            {location ? 'Check In' : 'Getting location...'}
           </button>
-        </>
-      )}
+        ) : (
+          <>
+            <form onSubmit={handleSaleSubmit} className="mb-4">
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="name">
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Customer Name"
+                  className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="phone">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Phone Number"
+                  className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="email">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Email Address"
+                  className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="deviceModel">
+                  Device Model
+                </label>
+                <input
+                  type="text"
+                  name="deviceModel"
+                  value={formData.deviceModel}
+                  onChange={handleInputChange}
+                  placeholder="Device Model"
+                  className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline"
+              >
+                Record Sale
+              </button>
+            </form>
+
+            <button
+              onClick={handleCheckOut}
+              className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full mt-4 focus:outline-none focus:shadow-outline"
+            >
+              Check Out
+            </button>
+          </>
+        )}
+      </div>
     </div>
 
-    <div className="w-full sm:w-1/2 bg-gray-100 p-6 rounded-xl shadow-md max-h-96 overflow-y-auto">
-      {isCheckedIn && (
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold">Today&apos;s Sales: {sales.length}</h2>
-          {sales.map((sale, index) => (
-            <div key={index} className="mt-2 text-sm p-3 bg-white rounded-md shadow-sm">
-              <p className="font-medium">Sale at {new Date(sale.createdAt).toLocaleString()}</p>
-              <p>Customer: {sale.customerName}</p>
-              <p>Device: {sale.deviceModel}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    {isCheckedIn && (
+      <div className="max-w-sm w-full bg-gray-100 p-6 rounded-md shadow-md max-h-[80vh] overflow-y-auto">
+        <h2 className="text-xl font-semibold mb-4">Today&apos;s Sales: {sales.length}</h2>
+        {sales.map((sale, index) => (
+          <div key={index} className="mb-4 p-4 bg-white rounded-md shadow-sm">
+            <p className="font-medium">Sale at {new Date(sale.createdAt).toLocaleString()}</p>
+            <p>Customer: {sale.customerName}</p>
+            <p>Device: {sale.deviceModel}</p>
+          </div>
+        ))}
+      </div>
+    )}
   </div>
 );
 
