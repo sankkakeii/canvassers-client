@@ -1,3 +1,4 @@
+import BranchDropdown from '@/components/branchesComponent';
 import React, { useState, useEffect } from 'react';
 
 const AdminApp = () => {
@@ -6,8 +7,10 @@ const AdminApp = () => {
     const [sales, setSales] = useState([]);
     const [message, setMessage] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
-    // const API_URL = 'http://localhost:5001/api';
-    const API_URL = 'https://canvassers-api.onrender.com/api';
+    const API_URL = 'http://localhost:5001/api';
+    // const API_URL = 'https://canvassers-api.onrender.com/api';
+    // const [selectedBranch, setSelectedBranch] = useState(localStorage.getItem('selectedBranch') || '');
+    const [selectedBranch, setSelectedBranch] = useState('');
 
     useEffect(() => {
         fetchUsers();
@@ -91,6 +94,7 @@ const AdminApp = () => {
         <div className="flex flex-col items-center justify-center w-full h-fit p-4 bg-gray-100">
             <div className="w-full max-w-6xl bg-white rounded-xl shadow-md p-6">
                 <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+                <BranchDropdown selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} />
 
                 {message && (
                     <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
@@ -136,14 +140,18 @@ const AdminApp = () => {
                         <thead>
                             <tr className="bg-gray-200">
                                 <th className="border p-2 text-left">Check-In Time</th>
+                                <th className="border p-2 text-left">Name</th>
                                 <th className="border p-2 text-left">User ID</th>
+                                <th className="border p-2 text-left">Location</th>
                             </tr>
                         </thead>
                         <tbody>
                             {checkIns.map(checkIn => (
                                 <tr key={checkIn.id} className="hover:bg-gray-100">
                                     <td className="border p-2">{new Date(checkIn.checkInDateTime).toLocaleString()}</td>
+                                    <td className="border p-2">{checkIn.fullName}</td>
                                     <td className="border p-2">{checkIn.userId}</td>
+                                    <td className="border p-2">{checkIn.checkInLocation}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -157,7 +165,9 @@ const AdminApp = () => {
                             <tr className="bg-gray-200">
                                 <th className="border p-2 text-left">Sale Time</th>
                                 <th className="border p-2 text-left">Customer Name</th>
-                                <th className="border p-2 text-left">Device Model</th>
+                                <th className="border p-2 text-left">Customer Phone</th>
+                                <th className="border p-2 text-left">AXAInsurance Card Serial</th>
+                                <th className="border p-2 text-left">Sale Location</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -165,7 +175,9 @@ const AdminApp = () => {
                                 <tr key={sale.id} className="hover:bg-gray-100">
                                     <td className="border p-2">{new Date(sale.createdAt).toLocaleString()}</td>
                                     <td className="border p-2">{sale.customerName}</td>
-                                    <td className="border p-2">{sale.deviceModel}</td>
+                                    <td className="border p-2">{sale.customerPhone}</td>
+                                    <td className="border p-2">{sale.axaInsuranceCardSerial}</td>
+                                    <td className="border p-2">{sale.location}</td>
                                 </tr>
                             ))}
                         </tbody>
