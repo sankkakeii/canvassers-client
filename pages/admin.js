@@ -7,8 +7,8 @@ const AdminApp = () => {
     const [sales, setSales] = useState([]);
     const [message, setMessage] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
-    const API_URL = 'http://localhost:5001/api';
-    // const API_URL = 'https://canvassers-api.onrender.com/api';
+    // const API_URL = 'http://localhost:5001/api';
+    const API_URL = 'https://canvassers-api.onrender.com/api';
     // const [selectedBranch, setSelectedBranch] = useState(localStorage.getItem('selectedBranch') || '');
     const [selectedBranch, setSelectedBranch] = useState('');
 

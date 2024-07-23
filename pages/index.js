@@ -22,8 +22,8 @@ const CanvasserApp = () => {
   // const [selectedBranch, setSelectedBranch] = useState(localStorage.getItem('selectedBranch') || '');
   const [selectedBranch, setSelectedBranch] = useState('');
 
-  const API_URL = 'http://localhost:5001/api';
-  // const API_URL = 'https://canvassers-api.onrender.com/api';
+  // const API_URL = 'http://localhost:5001/api';
+  const API_URL = 'https://canvassers-api.onrender.com/api';
 
   useEffect(() => {
     if ("geolocation" in navigator) {
