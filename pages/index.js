@@ -429,17 +429,18 @@ const CanvasserApp = () => {
               </div>
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Canvasser App Tutorial
+                  Insurance Card Activation Report Form
                 </h3>
                 <div className="mt-2">
                   <p className="text-sm text-gray-500">
-                    Welcome to the Canvasser App! Here are some steps to get you started:
+                    Welcome to the Insurance Card Activation Report Form! Here are some steps to get you started:
                   </p>
                   <ul className="list-disc pl-5 mt-2 text-sm text-gray-500">
                     <li>Register a new account or sign in with your existing credentials.</li>
-                    <li>Check in to your current location before starting your work.</li>
+                    <li>If your account is new send a massage to activate your account and assign your slot location.</li>
+                    <li>Check in to your current location before starting your work.(YOUR DEVICE LOCATION BUT BE ON)</li>
                     <li>Record sales by filling in the customer&apos;s details and device information.</li>
-                    <li>Check out at the end of the day to save your work and reset sales for the next day.</li>
+                    <li>Check out at the end of the day to save your work for the day.</li>
                   </ul>
                 </div>
               </div>
