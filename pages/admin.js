@@ -7,8 +7,8 @@ const AdminApp = () => {
     const [sales, setSales] = useState([]);
     const [message, setMessage] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
-    // const API_URL = 'http://localhost:5001/api';
-    const API_URL = 'https://canvassers-api.onrender.com/api';
+    const API_URL = 'http://localhost:5001/api';
+    // const API_URL = 'https://canvassers-api.onrender.com/api';
     // const [selectedBranch, setSelectedBranch] = useState(localStorage.getItem('selectedBranch') || '');
     const [selectedBranch, setSelectedBranch] = useState('');
 
@@ -33,6 +33,8 @@ const AdminApp = () => {
             setMessage('Error fetching users');
         }
     };
+
+    console.log(selectedBranch)
 
     const fetchCheckIns = async () => {
         try {
@@ -74,7 +76,7 @@ const AdminApp = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ active })
+                body: JSON.stringify({ active, slotLocation: selectedBranch })
             });
             if (!response.ok) throw new Error('Failed to update user status');
             const data = await response.json();
@@ -110,6 +112,7 @@ const AdminApp = () => {
                                 <th className="border p-2 text-left">Name</th>
                                 <th className="border p-2 text-left">Email</th>
                                 <th className="border p-2 text-left">Status</th>
+                                <th className="border p-2 text-left">Slot Location</th>
                                 <th className="border p-2 text-left">Actions</th>
                             </tr>
                         </thead>
@@ -119,6 +122,7 @@ const AdminApp = () => {
                                     <td className="border p-2">{user.name}</td>
                                     <td className="border p-2">{user.email}</td>
                                     <td className="border p-2">{user.active ? 'Active' : 'Inactive'}</td>
+                                    <td className="border p-2">{user.slotLocation}</td>
                                     <td className="border p-2">
                                         <button
                                             onClick={() => handleStatusChange(user, user.active)}
