@@ -251,8 +251,9 @@ const AdminApp = () => {
                             <tr className="bg-gray-200">
                                 <th className="border p-2 text-left">Sale Time</th>
                                 <th className="border p-2 text-left">User ID</th>
-                                <th className="border p-2 text-left">Amount</th>
-                                <th className="border p-2 text-left">Product</th>
+                                <th className="border p-2 text-left">Customer Name</th>
+                                <th className="border p-2 text-left">Customer Phone</th>
+                                <th className="border p-2 text-left">AXA Insurance Card</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -260,8 +261,9 @@ const AdminApp = () => {
                                 <tr key={sale.id} className="hover:bg-gray-100">
                                     <td className="border p-2">{new Date(sale.created_at).toLocaleString()}</td>
                                     <td className="border p-2">{sale.user_id}</td>
-                                    <td className="border p-2">{sale.amount}</td>
-                                    <td className="border p-2">{sale.product}</td>
+                                    <td className="border p-2">{sale.customer_name}</td>
+                                    <td className="border p-2">{sale.customer_phone}</td>
+                                    <td className="border p-2">{sale.axa_insurance_card_serial}</td>
                                 </tr>
                             ))}
                         </tbody>
