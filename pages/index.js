@@ -25,7 +25,8 @@ const CanvasserApp = () => {
   const [showTutorial, setShowTutorial] = useState(false);
 
   // const API_URL = 'http://localhost:5001/api';
-  const API_URL = 'https://canvassers-api.onrender.com/api';
+  // const API_URL = 'https://canvassers-api.onrender.com/api';
+  const API_URL = '/api';
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -39,10 +40,31 @@ const CanvasserApp = () => {
   }, []);
 
   useEffect(() => {
-    if (isCheckedIn) {
-      fetchTodaySales();
-    }
-  }, [isCheckedIn]);
+    const checkLoginStatus = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await fetch('/api/supa/check-in', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          if (data.isCheckedIn) {
+            setIsCheckedIn(true);
+            fetchTodaySales();
+          }
+        } catch (error) {
+          console.error('Error checking login status:', error);
+        }
+      }
+    };
+    checkLoginStatus();
+  }, []);
+
+  // useEffect(() => {
+  //   if (isCheckedIn) {
+  //     fetchTodaySales();
+  //   }
+  // }, [isCheckedIn]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -64,7 +86,7 @@ const CanvasserApp = () => {
   };
 
   const registerUser = async (userData) => {
-    const response = await fetch(`${API_URL}/auth/register`, {
+    const response = await fetch(`${API_URL}/supa/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
@@ -76,15 +98,23 @@ const CanvasserApp = () => {
   };
 
   const loginUser = async (credentials) => {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials)
-    });
-    if (!response.ok) {
-      throw new Error('Login failed');
+    try {
+      const response = await fetch(`${API_URL}/supa/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-    return response.json();
   };
 
   const fetchTodaySales = async () => {
@@ -118,6 +148,7 @@ const CanvasserApp = () => {
     e.preventDefault();
     try {
       const response = await registerUser(formData);
+      console.log(formData)
       setMessage(response.message);
       setIsRegistering(false);
     } catch (error) {
@@ -133,7 +164,7 @@ const CanvasserApp = () => {
       localStorage.setItem('token', response.token);
       setMessage(`Welcome, ${response.user.name}!`);
     } catch (error) {
-      setMessage('Sign in failed. Please try again.');
+      setMessage(`Login failed. ${error.message}`);
     }
   };
 
@@ -142,7 +173,7 @@ const CanvasserApp = () => {
       const token = localStorage.getItem('token');
       const checkinLocation = JSON.stringify(location);
 
-      const response = await fetch(`${API_URL}/check-in/check-in`, {
+      const response = await fetch(`${API_URL}/supa/check-in`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,7 +199,7 @@ const CanvasserApp = () => {
   const handleCheckOut = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/check-in/check-out`, {
+      const response = await fetch(`${API_URL}/supa/check-out`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -193,16 +224,15 @@ const CanvasserApp = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
+      const salesLocation = JSON.stringify(location);
       const saleData = {
         customerName: formData.name,
         customerPhone: formData.phone,
-        customerEmail: 'customer_email',
-        deviceModel: 'device_model',
-        location: location, // Directly include location object
+        location: salesLocation,
         axaInsuranceCardSerial: formData.axaInsuranceCardSerial,
         customerRemark: formData.customerRemark
       };
-      const response = await fetch(`${API_URL}/sales`, {
+      const response = await fetch(`${API_URL}/supa/record-sale`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

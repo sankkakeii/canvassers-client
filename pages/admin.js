@@ -8,8 +8,9 @@ const AdminApp = () => {
     const [message, setMessage] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
     // const API_URL = 'http://localhost:5001/api';
-    const API_URL = 'https://canvassers-api.onrender.com/api';
+    // const API_URL = 'https://canvassers-api.onrender.com/api';
     // const [selectedBranch, setSelectedBranch] = useState(localStorage.getItem('selectedBranch') || '');
+    const API_URL = '/api';
     const [selectedBranch, setSelectedBranch] = useState('');
 
     useEffect(() => {
@@ -20,7 +21,7 @@ const AdminApp = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch(`${API_URL}/admin/users`, {
+            const response = await fetch(`${API_URL}/admin/get-users`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -38,7 +39,7 @@ const AdminApp = () => {
 
     const fetchCheckIns = async () => {
         try {
-            const response = await fetch(`${API_URL}/admin/check-ins`, {
+            const response = await fetch(`${API_URL}/admin/get-check-ins`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -54,7 +55,7 @@ const AdminApp = () => {
 
     const fetchSales = async () => {
         try {
-            const response = await fetch(`${API_URL}/admin/sales`, {
+            const response = await fetch(`${API_URL}/admin/get-sales`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -70,7 +71,7 @@ const AdminApp = () => {
 
     const updateUserStatus = async (userId, active) => {
         try {
-            const response = await fetch(`${API_URL}/admin/users/${userId}/status`, {
+            const response = await fetch(`${API_URL}/users/${userId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ const AdminApp = () => {
                                     <td className="border p-2">{user.name}</td>
                                     <td className="border p-2">{user.email}</td>
                                     <td className="border p-2">{user.active ? 'Active' : 'Inactive'}</td>
-                                    <td className="border p-2">{user.slotLocation}</td>
+                                    <td className="border p-2">{user.slot_location}</td>
                                     <td className="border p-2">
                                         <button
                                             onClick={() => handleStatusChange(user, user.active)}
