@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import branches from '@/components/branches';
-import BranchDropdown from '@/components/branchesComponent';
 import { FaInfoCircle } from 'react-icons/fa';
 
 const CanvasserApp = () => {
@@ -20,12 +18,8 @@ const CanvasserApp = () => {
     axaInsuranceCardSerial: ''
   });
   const [lastFetchDate, setLastFetchDate] = useState(new Date().toDateString());
-  // const [selectedBranch, setSelectedBranch] = useState(localStorage.getItem('selectedBranch') || '');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [showTutorial, setShowTutorial] = useState(false);
-
-  // const API_URL = 'http://localhost:5001/api';
-  // const API_URL = 'https://canvassers-api.onrender.com/api';
   const API_URL = '/api';
 
   useEffect(() => {
@@ -60,11 +54,6 @@ const CanvasserApp = () => {
     checkLoginStatus();
   }, []);
 
-  // useEffect(() => {
-  //   if (isCheckedIn) {
-  //     fetchTodaySales();
-  //   }
-  // }, [isCheckedIn]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -118,16 +107,18 @@ const CanvasserApp = () => {
   };
 
   const fetchTodaySales = async () => {
+    console.log('fetching today sales')
     const today = new Date().toDateString();
+    console.log(today)
     if (today !== lastFetchDate) {
       setSales([]); // Reset sales if it's a new day
       setLastFetchDate(today);
     }
 
-    if (isCheckedIn) {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/sales`, {
+        const response = await fetch(`/api/supa/fetch-sales`, {
+          method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -141,7 +132,6 @@ const CanvasserApp = () => {
         console.error('Error fetching sales:', error);
         setMessage('Error fetching today\'s sales');
       }
-    }
   };
 
   const handleRegister = async (e) => {
@@ -428,16 +418,16 @@ const CanvasserApp = () => {
     <div className="flex flex-col gap-3">
       <div className="max-w-sm w-full bg-gray-100 p-6 rounded-md shadow-md max-h-[80vh] overflow-y-auto">
         <h1 className="text-lg font-semibold text-center">SLOT LOCATION</h1>
-        <h1 className="text-md font-bold text-center">{user?.slotLocation}</h1>
+        <h1 className="text-md font-bold text-center">{user?.slot_location}</h1>
       </div>
       <div className="max-w-sm w-full bg-gray-100 p-6 rounded-md shadow-md max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-semibold mb-4">Today&apos;s Sales: {sales.length}</h2>
         {sales.map((sale, index) => (
           <div key={index} className="mb-4 p-4 bg-white rounded-md shadow-sm">
             <p className="font-medium">Sale at {new Date(sale.createdAt).toLocaleString()}</p>
-            <p>Customer: {sale.customerName}</p>
-            <p>Phone: {sale.customerPhone}</p>
-            <p>AXA Insurance Card: {sale.axaInsuranceCardSerial}</p>
+            <p>Customer: {sale.customer_name}</p>
+            <p>Phone: {sale.customer_phone}</p>
+            <p>AXA Insurance Card: {sale.axa_insurance_card_serial}</p>
           </div>
         ))}
       </div>

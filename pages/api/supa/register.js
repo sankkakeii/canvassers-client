@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         const { data, error } = await supabase
             .from('users')
             .insert([
-                { email, password: hashedPassword, name, phone }
+                { email, password: hashedPassword, name, phone, active: false }
             ])
 
         if (error) throw error
