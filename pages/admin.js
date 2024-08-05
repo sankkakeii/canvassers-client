@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 import branches from '@/components/branches';
+import Pagination from '@/components/Pagination'; // Assuming you have a Pagination component
 
+const ITEMS_PER_PAGE = 10; // Number of items per page for pagination
 
 // Searchable BranchDropdown component
 const BranchDropdown = ({ selectedBranch, setSelectedBranch }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    // const branches = ['Branch A', 'Branch B', 'Branch C', 'Branch D', 'Branch E']; // Replace with your actual branch list
 
-    const filteredBranches = branches.filter(branch => 
+    const filteredBranches = branches.filter(branch =>
         branch.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -50,6 +50,7 @@ const AdminApp = () => {
     const [checkInSearch, setCheckInSearch] = useState('');
     const [saleSearch, setSaleSearch] = useState('');
     const [userFilter, setUserFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
     const API_URL = '/api';
 
     useEffect(() => {
@@ -130,6 +131,16 @@ const AdminApp = () => {
         updateUserStatus(user.id, active ? 0 : 1);
     };
 
+    const getUserById = (id) => {
+        return users.find(user => user.id === id);
+    };
+
+    const getPageData = (data, page) => {
+        const startIndex = (page - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        return data.slice(startIndex, endIndex);
+    };
+
     const filteredUsers = users.filter(user =>
         (user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
         user.email.toLowerCase().includes(userSearch.toLowerCase())) &&
@@ -139,11 +150,23 @@ const AdminApp = () => {
     const filteredCheckIns = checkIns.filter(checkIn =>
         checkIn.location.toLowerCase().includes(checkInSearch.toLowerCase()) ||
         checkIn.branch.toLowerCase().includes(checkInSearch.toLowerCase())
-    );
+    ).reduce((acc, checkIn) => {
+        const existing = acc.find(item => item.user_id === checkIn.user_id);
+        if (existing) {
+            existing.check_in_time = new Date(Math.min(new Date(existing.check_in_time), new Date(checkIn.check_in_time))).toLocaleString();
+        } else {
+            acc.push({ ...checkIn, check_in_time: new Date(checkIn.check_in_time).toLocaleString() });
+        }
+        return acc;
+    }, []);
 
     const filteredSales = sales.filter(sale =>
         sale.id.toString().toLowerCase().includes(saleSearch.toLowerCase())
     );
+
+    const userPageData = getPageData(filteredUsers, currentPage);
+    const checkInPageData = getPageData(filteredCheckIns, currentPage);
+    const salesPageData = getPageData(filteredSales, currentPage);
 
     return (
         <div className="flex flex-col items-center justify-center w-full h-fit p-4 bg-gray-100">
@@ -188,7 +211,7 @@ const AdminApp = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredUsers.map(user => (
+                            {userPageData.map(user => (
                                 <tr key={user.id} className="hover:bg-gray-100">
                                     <td className="border p-2">{user.name}</td>
                                     <td className="border p-2">{user.email}</td>
@@ -206,6 +229,12 @@ const AdminApp = () => {
                             ))}
                         </tbody>
                     </table>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalItems={filteredUsers.length}
+                        itemsPerPage={ITEMS_PER_PAGE}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
 
                 <h2 className="text-xl font-semibold mt-6 mb-2">Check-Ins</h2>
@@ -221,21 +250,32 @@ const AdminApp = () => {
                             <tr className="bg-gray-200">
                                 <th className="border p-2 text-left">Check-In Time</th>
                                 <th className="border p-2 text-left">User ID</th>
+                                <th className="border p-2 text-left">User Name</th>
                                 <th className="border p-2 text-left">Location</th>
                                 <th className="border p-2 text-left">Branch</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredCheckIns.map(checkIn => (
-                                <tr key={checkIn.id} className="hover:bg-gray-100">
-                                    <td className="border p-2">{new Date(checkIn.check_in_time).toLocaleString()}</td>
-                                    <td className="border p-2">{checkIn.user_id}</td>
-                                    <td className="border p-2">{checkIn.location}</td>
-                                    <td className="border p-2">{checkIn.branch}</td>
-                                </tr>
-                            ))}
+                            {checkInPageData.map(checkIn => {
+                                const user = getUserById(checkIn.user_id);
+                                return (
+                                    <tr key={checkIn.id} className="hover:bg-gray-100">
+                                        <td className="border p-2">{checkIn.check_in_time}</td>
+                                        <td className="border p-2">{checkIn.user_id}</td>
+                                        <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
+                                        <td className="border p-2">{checkIn.location}</td>
+                                        <td className="border p-2">{checkIn.branch}</td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalItems={filteredCheckIns.length}
+                        itemsPerPage={ITEMS_PER_PAGE}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
 
                 <h2 className="text-xl font-semibold mt-6 mb-2">Sales</h2>
@@ -251,23 +291,34 @@ const AdminApp = () => {
                             <tr className="bg-gray-200">
                                 <th className="border p-2 text-left">Sale Time</th>
                                 <th className="border p-2 text-left">User ID</th>
+                                <th className="border p-2 text-left">User Name</th>
                                 <th className="border p-2 text-left">Customer Name</th>
                                 <th className="border p-2 text-left">Customer Phone</th>
                                 <th className="border p-2 text-left">AXA Insurance Card</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredSales.map(sale => (
-                                <tr key={sale.id} className="hover:bg-gray-100">
-                                    <td className="border p-2">{new Date(sale.created_at).toLocaleString()}</td>
-                                    <td className="border p-2">{sale.user_id}</td>
-                                    <td className="border p-2">{sale.customer_name}</td>
-                                    <td className="border p-2">{sale.customer_phone}</td>
-                                    <td className="border p-2">{sale.axa_insurance_card_serial}</td>
-                                </tr>
-                            ))}
+                            {salesPageData.map(sale => {
+                                const user = getUserById(sale.user_id);
+                                return (
+                                    <tr key={sale.id} className="hover:bg-gray-100">
+                                        <td className="border p-2">{new Date(sale.created_at).toLocaleString()}</td>
+                                        <td className="border p-2">{sale.user_id}</td>
+                                        <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
+                                        <td className="border p-2">{sale.customer_name}</td>
+                                        <td className="border p-2">{sale.customer_phone}</td>
+                                        <td className="border p-2">{sale.axa_insurance_card_serial}</td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalItems={filteredSales.length}
+                        itemsPerPage={ITEMS_PER_PAGE}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             </div>
         </div>
