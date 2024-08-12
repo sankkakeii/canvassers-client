@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import branches from '@/components/branches';
-import Pagination from '@/components/Pagination'; // Assuming you have a Pagination component
+import Pagination from '@/components/Pagination';
 
-const ITEMS_PER_PAGE = 10; // Number of items per page for pagination
+import UserChart from '@/components/admin-components/UserChart';
+import CheckInChart from '@/components/admin-components/CheckInChart';
+import SalesChart from '@/components/admin-components/SalesChart';
+import UserSalesChart from '@/components/admin-components/UserSalesChart';
+import SalesOverTimeChart from '@/components/admin-components/SalesOverTimeChart';
 
-// Searchable BranchDropdown component
+const ITEMS_PER_PAGE = 10;
+
 const BranchDropdown = ({ selectedBranch, setSelectedBranch }) => {
     const [searchTerm, setSearchTerm] = useState('');
-
     const filteredBranches = branches.filter(branch =>
         branch.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -39,7 +43,67 @@ const BranchDropdown = ({ selectedBranch, setSelectedBranch }) => {
     );
 };
 
-// Main AdminApp component
+const Sidebar = ({ activeSection, setActiveSection }) => {
+    const sections = ['Overview', 'Users', 'Check-Ins', 'Sales'];
+    return (
+        <aside className="w-64 bg-gray-800 text-white h-screen p-4">
+            <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
+            <ul>
+                {sections.map((section) => (
+                    <li key={section} className="mb-2">
+                        <button
+                            onClick={() => setActiveSection(section)}
+                            className={`w-full text-left p-2 rounded ${activeSection === section ? 'bg-gray-600' : 'hover:bg-gray-700'}`}
+                        >
+                            {section}
+                        </button>
+                    </li>
+                ))}
+            </ul>
+        </aside>
+    );
+};
+
+const Overview = ({ users, sales }) => {
+    const totalUsers = users.length;
+    const totalSales = sales.length;
+
+    const topSellers = users
+        .map(user => ({
+            id: user.id,
+            name: user.name,
+            salesCount: sales.filter(sale => sale.user_id === user.id).length
+        }))
+        .sort((a, b) => b.salesCount - a.salesCount)
+        .slice(0, 3);
+
+    return (
+        <div className="p-4">
+            <h2 className="text-2xl font-bold mb-4">Overview</h2>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-blue-100 p-4 rounded-lg">
+                    <h3 className="text-xl font-semibold mb-2">Total Users</h3>
+                    <p className="text-3xl font-bold">{totalUsers}</p>
+                </div>
+                <div className="bg-green-100 p-4 rounded-lg">
+                    <h3 className="text-xl font-semibold mb-2">Total Sales</h3>
+                    <p className="text-3xl font-bold">{totalSales}</p>
+                </div>
+            </div>
+            <div className="bg-yellow-100 p-4 rounded-lg">
+                <h3 className="text-xl font-semibold mb-2">Top 3 Sellers</h3>
+                <ol className="list-decimal list-inside">
+                    {topSellers.map((seller, index) => (
+                        <li key={seller.id} className="text-lg">
+                            {seller.name} - {seller.salesCount} sales
+                        </li>
+                    ))}
+                </ol>
+            </div>
+        </div>
+    );
+};
+
 const AdminApp = () => {
     const [users, setUsers] = useState([]);
     const [checkIns, setCheckIns] = useState([]);
@@ -51,6 +115,7 @@ const AdminApp = () => {
     const [saleSearch, setSaleSearch] = useState('');
     const [userFilter, setUserFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
+    const [activeSection, setActiveSection] = useState('Overview');
     const API_URL = '/api';
 
     useEffect(() => {
@@ -143,7 +208,7 @@ const AdminApp = () => {
 
     const filteredUsers = users.filter(user =>
         (user.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-        user.email.toLowerCase().includes(userSearch.toLowerCase())) &&
+            user.email.toLowerCase().includes(userSearch.toLowerCase())) &&
         (userFilter === 'all' || (userFilter === 'active' && user.active) || (userFilter === 'inactive' && !user.active))
     );
 
@@ -168,8 +233,180 @@ const AdminApp = () => {
     const checkInPageData = getPageData(filteredCheckIns, currentPage);
     const salesPageData = getPageData(filteredSales, currentPage);
 
-    return (
-        <div className="flex flex-col items-center justify-center w-full h-fit p-4 bg-gray-100">
+    const renderContent = () => {
+        switch (activeSection) {
+            case 'Overview':
+                return <Overview users={users} sales={sales} />;
+            case 'Users':
+                return (
+                    <div>
+                        <h2 className="text-xl font-semibold mb-2">Users</h2>
+                        <div className="mb-4 flex gap-4">
+                            <Input
+                                placeholder="Search users..."
+                                value={userSearch}
+                                onChange={(e) => setUserSearch(e.target.value)}
+                                className="max-w-sm"
+                            />
+                            <Select value={userFilter} onValueChange={setUserFilter}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Filter by status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="inactive">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full table-auto border-collapse border border-gray-200">
+                                <thead>
+                                    <tr className="bg-gray-200">
+                                        <th className="border p-2 text-left">Name</th>
+                                        <th className="border p-2 text-left">Email</th>
+                                        <th className="border p-2 text-left">Status</th>
+                                        <th className="border p-2 text-left">Slot Location</th>
+                                        <th className="border p-2 text-left">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {userPageData.map(user => (
+                                        <tr key={user.id} className="hover:bg-gray-100">
+                                            <td className="border p-2">{user.name}</td>
+                                            <td className="border p-2">{user.email}</td>
+                                            <td className="border p-2">{user.active ? 'Active' : 'Inactive'}</td>
+                                            <td className="border p-2">{user.slot_location}</td>
+                                            <td className="border p-2">
+                                                <button
+                                                    onClick={() => handleStatusChange(user, user.active)}
+                                                    className={`px-4 py-2 rounded-md ${user.active ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
+                                                >
+                                                    {user.active ? 'Deactivate' : 'Activate'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalItems={filteredUsers.length}
+                                itemsPerPage={ITEMS_PER_PAGE}
+                                onPageChange={setCurrentPage}
+                            />
+                        </div>
+                        <UserChart users={filteredUsers} />
+                    </div>
+                );
+            case 'Check-Ins':
+                return (
+                    <div>
+                        <h2 className="text-xl font-semibold mb-2">Check-Ins</h2>
+                        <Input
+                            placeholder="Search check-ins..."
+                            value={checkInSearch}
+                            onChange={(e) => setCheckInSearch(e.target.value)}
+                            className="max-w-sm mb-4"
+                        />
+                        <div className="overflow-x-auto">
+                            <table className="w-full table-auto border-collapse border border-gray-200">
+                                <thead>
+                                    <tr className="bg-gray-200">
+                                        <th className="border p-2 text-left">Check-In Time</th>
+                                        <th className="border p-2 text-left">User ID</th>
+                                        <th className="border p-2 text-left">User Name</th>
+                                        <th className="border p-2 text-left">Location</th>
+                                        <th className="border p-2 text-left">Branch</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {checkInPageData.map(checkIn => {
+                                        const user = getUserById(checkIn.user_id);
+                                        return (
+                                            <tr key={checkIn.id} className="hover:bg-gray-100">
+                                                <td className="border p-2">{checkIn.check_in_time}</td>
+                                                <td className="border p-2">{checkIn.user_id}</td>
+                                                <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
+                                                <td className="border p-2">{checkIn.location}</td>
+                                                <td className="border p-2">{checkIn.branch}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalItems={filteredCheckIns.length}
+                                itemsPerPage={ITEMS_PER_PAGE}
+                                onPageChange={setCurrentPage}
+                            />
+                        </div>
+                        <CheckInChart checkIns={filteredCheckIns} />
+                    </div>
+                );
+            case 'Sales':
+                return (<div>
+                    <h2 className="text-xl font-semibold mb-2">Sales</h2>
+                    <Input
+                        placeholder="Search sales..."
+                        value={saleSearch}
+                        onChange={(e) => setSaleSearch(e.target.value)}
+                        className="max-w-sm mb-4"
+                    />
+                    <div className="overflow-x-auto">
+                        <table className="w-full table-auto border-collapse border border-gray-200">
+                            <thead>
+                                <tr className="bg-gray-200">
+                                    <th className="border p-2 text-left">Sale Time</th>
+                                    <th className="border p-2 text-left">User ID</th>
+                                    <th className="border p-2 text-left">User Name</th>
+                                    <th className="border p-2 text-left">Customer Name</th>
+                                    <th className="border p-2 text-left">Customer Phone</th>
+                                    <th className="border p-2 text-left">AXA Insurance Card</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {salesPageData.map(sale => {
+                                    const user = getUserById(sale.user_id);
+                                    return (
+                                        <tr key={sale.id} className="hover:bg-gray-100">
+                                            <td className="border p-2">{new Date(sale.created_at).toLocaleString()}</td>
+                                            <td className="border p-2">{sale.user_id}</td>
+                                            <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
+                                            <td className="border p-2">{sale.customer_name}</td>
+                                            <td className="border p-2">{sale.customer_phone}</td>
+                                            <td className="border p-2">{sale.axa_insurance_card_serial}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalItems={filteredSales.length}
+                            itemsPerPage={ITEMS_PER_PAGE}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                    <SalesOverTimeChart sales={sales} />
+                    <UserSalesChart sales={sales} users={filteredUsers} />
+                    <SalesChart sales={sales} />
+                </div>
+            );
+        default:
+            return <div>Select a section from the sidebar</div>;
+    }
+};
+
+return (
+    <div className="flex">
+        <Sidebar
+            activeSection={activeSection}
+            setActiveSection={setActiveSection}
+            className="w-64 bg-gray-800 text-white min-h-screen"
+        />
+        <div className="flex-1 p-4 bg-gray-100 min-h-screen">
             <div className="w-full max-w-6xl bg-white rounded-xl shadow-md p-6">
                 <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
                 <BranchDropdown selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} />
@@ -180,149 +417,13 @@ const AdminApp = () => {
                     </div>
                 )}
 
-                <h2 className="text-xl font-semibold mb-2">Users</h2>
-                <div className="mb-4 flex gap-4">
-                    <Input
-                        placeholder="Search users..."
-                        value={userSearch}
-                        onChange={(e) => setUserSearch(e.target.value)}
-                        className="max-w-sm"
-                    />
-                    <Select value={userFilter} onValueChange={setUserFilter}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full table-auto border-collapse border border-gray-200">
-                        <thead>
-                            <tr className="bg-gray-200">
-                                <th className="border p-2 text-left">Name</th>
-                                <th className="border p-2 text-left">Email</th>
-                                <th className="border p-2 text-left">Status</th>
-                                <th className="border p-2 text-left">Slot Location</th>
-                                <th className="border p-2 text-left">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {userPageData.map(user => (
-                                <tr key={user.id} className="hover:bg-gray-100">
-                                    <td className="border p-2">{user.name}</td>
-                                    <td className="border p-2">{user.email}</td>
-                                    <td className="border p-2">{user.active ? 'Active' : 'Inactive'}</td>
-                                    <td className="border p-2">{user.slot_location}</td>
-                                    <td className="border p-2">
-                                        <button
-                                            onClick={() => handleStatusChange(user, user.active)}
-                                            className={`px-4 py-2 rounded-md ${user.active ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
-                                        >
-                                            {user.active ? 'Deactivate' : 'Activate'}
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <Pagination
-                        currentPage={currentPage}
-                        totalItems={filteredUsers.length}
-                        itemsPerPage={ITEMS_PER_PAGE}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
-
-                <h2 className="text-xl font-semibold mt-6 mb-2">Check-Ins</h2>
-                <Input
-                    placeholder="Search check-ins..."
-                    value={checkInSearch}
-                    onChange={(e) => setCheckInSearch(e.target.value)}
-                    className="max-w-sm mb-4"
-                />
-                <div className="overflow-x-auto">
-                    <table className="w-full table-auto border-collapse border border-gray-200">
-                        <thead>
-                            <tr className="bg-gray-200">
-                                <th className="border p-2 text-left">Check-In Time</th>
-                                <th className="border p-2 text-left">User ID</th>
-                                <th className="border p-2 text-left">User Name</th>
-                                <th className="border p-2 text-left">Location</th>
-                                <th className="border p-2 text-left">Branch</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {checkInPageData.map(checkIn => {
-                                const user = getUserById(checkIn.user_id);
-                                return (
-                                    <tr key={checkIn.id} className="hover:bg-gray-100">
-                                        <td className="border p-2">{checkIn.check_in_time}</td>
-                                        <td className="border p-2">{checkIn.user_id}</td>
-                                        <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
-                                        <td className="border p-2">{checkIn.location}</td>
-                                        <td className="border p-2">{checkIn.branch}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                    <Pagination
-                        currentPage={currentPage}
-                        totalItems={filteredCheckIns.length}
-                        itemsPerPage={ITEMS_PER_PAGE}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
-
-                <h2 className="text-xl font-semibold mt-6 mb-2">Sales</h2>
-                <Input
-                    placeholder="Search sales..."
-                    value={saleSearch}
-                    onChange={(e) => setSaleSearch(e.target.value)}
-                    className="max-w-sm mb-4"
-                />
-                <div className="overflow-x-auto">
-                    <table className="w-full table-auto border-collapse border border-gray-200">
-                        <thead>
-                            <tr className="bg-gray-200">
-                                <th className="border p-2 text-left">Sale Time</th>
-                                <th className="border p-2 text-left">User ID</th>
-                                <th className="border p-2 text-left">User Name</th>
-                                <th className="border p-2 text-left">Customer Name</th>
-                                <th className="border p-2 text-left">Customer Phone</th>
-                                <th className="border p-2 text-left">AXA Insurance Card</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {salesPageData.map(sale => {
-                                const user = getUserById(sale.user_id);
-                                return (
-                                    <tr key={sale.id} className="hover:bg-gray-100">
-                                        <td className="border p-2">{new Date(sale.created_at).toLocaleString()}</td>
-                                        <td className="border p-2">{sale.user_id}</td>
-                                        <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
-                                        <td className="border p-2">{sale.customer_name}</td>
-                                        <td className="border p-2">{sale.customer_phone}</td>
-                                        <td className="border p-2">{sale.axa_insurance_card_serial}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                    <Pagination
-                        currentPage={currentPage}
-                        totalItems={filteredSales.length}
-                        itemsPerPage={ITEMS_PER_PAGE}
-                        onPageChange={setCurrentPage}
-                    />
-                </div>
+                {renderContent()}
             </div>
         </div>
-    );
+    </div>
+);
 };
 
 export default AdminApp;
+
+
