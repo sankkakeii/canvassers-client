@@ -46,7 +46,7 @@ const BranchDropdown = ({ selectedBranch, setSelectedBranch }) => {
 const Sidebar = ({ activeSection, setActiveSection }) => {
     const sections = ['Overview', 'Users', 'Check-Ins', 'Sales'];
     return (
-        <aside className="w-64 bg-gray-800 text-white h-screen p-4">
+        <aside className=" fixed top-0 left-0 w-64 bg-gray-800 text-white h-screen p-4">
             <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
             <ul>
                 {sections.map((section) => (
@@ -391,7 +391,7 @@ const AdminApp = () => {
                     </div>
                     <SalesOverTimeChart sales={sales} />
                     <UserSalesChart sales={sales} users={filteredUsers} />
-                    <SalesChart sales={sales} />
+                    {/* <SalesChart sales={sales} /> */}
                 </div>
             );
         default:
@@ -404,9 +404,9 @@ return (
         <Sidebar
             activeSection={activeSection}
             setActiveSection={setActiveSection}
-            className="w-64 bg-gray-800 text-white min-h-screen"
+            className=" bg-gray-800 text-white min-h-screen"
         />
-        <div className="flex-1 p-4 bg-gray-100 min-h-screen">
+        <div className="ml-64 w-full flex-1 p-4 bg-gray-100 min-h-screen">
             <div className="w-full max-w-6xl bg-white rounded-xl shadow-md p-6">
                 <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
                 <BranchDropdown selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} />
@@ -425,5 +425,3 @@ return (
 };
 
 export default AdminApp;
-
-
