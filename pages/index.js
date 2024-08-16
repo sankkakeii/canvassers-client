@@ -5,7 +5,7 @@ const CanvasserApp = () => {
   const [user, setUser] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [sales, setSales] = useState([]);
+  const [feedback, setFeedback] = useState('');
   const [location, setLocation] = useState(null);
   const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
@@ -13,21 +13,19 @@ const CanvasserApp = () => {
     password: '',
     name: '',
     phone: '',
-    deviceModel: '',
-    customerRemark: '',
-    axaInsuranceCardSerial: ''
   });
   const [lastFetchDate, setLastFetchDate] = useState(new Date().toDateString());
   const [selectedBranch, setSelectedBranch] = useState('');
   const [showTutorial, setShowTutorial] = useState(false);
+  const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
   const API_URL = '/api';
 
   useEffect(() => {
-    if ("geolocation" in navigator) {
+    if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(position => {
         setLocation({
           latitude: position.coords.latitude,
-          longitude: position.coords.longitude
+          longitude: position.coords.longitude,
         });
       });
     }
@@ -38,13 +36,12 @@ const CanvasserApp = () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const response = await fetch('/api/supa/check-in', {
-            headers: { 'Authorization': `Bearer ${token}` }
+          const response = await fetch(`${API_URL}/supa/check-in`, {
+            headers: { Authorization: `Bearer ${token}` },
           });
           const data = await response.json();
           if (data.isCheckedIn) {
             setIsCheckedIn(true);
-            fetchTodaySales();
           }
         } catch (error) {
           console.error('Error checking login status:', error);
@@ -54,31 +51,19 @@ const CanvasserApp = () => {
     checkLoginStatus();
   }, []);
 
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const today = new Date().toDateString();
-      if (today !== lastFetchDate) {
-        fetchTodaySales();
-      }
-    }, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, [lastFetchDate]);
-
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     const { name, value } = e.target;
     setFormData(prevState => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const registerUser = async (userData) => {
+  const registerUser = async userData => {
     const response = await fetch(`${API_URL}/supa/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
+      body: JSON.stringify(userData),
     });
     if (!response.ok) {
       throw new Error('Registration failed');
@@ -86,12 +71,12 @@ const CanvasserApp = () => {
     return response.json();
   };
 
-  const loginUser = async (credentials) => {
+  const loginUser = async credentials => {
     try {
       const response = await fetch(`${API_URL}/supa/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials)
+        body: JSON.stringify(credentials),
       });
 
       if (!response.ok) {
@@ -106,39 +91,10 @@ const CanvasserApp = () => {
     }
   };
 
-  const fetchTodaySales = async () => {
-    console.log('fetching today sales')
-    const today = new Date().toDateString();
-    console.log(today)
-    if (today !== lastFetchDate) {
-      setSales([]); // Reset sales if it's a new day
-      setLastFetchDate(today);
-    }
-
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/supa/fetch-sales`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch sales');
-        }
-        const data = await response.json();
-        setSales(data);
-      } catch (error) {
-        console.error('Error fetching sales:', error);
-        setMessage('Error fetching today\'s sales');
-      }
-  };
-
-  const handleRegister = async (e) => {
+  const handleRegister = async e => {
     e.preventDefault();
     try {
       const response = await registerUser(formData);
-      console.log(formData)
       setMessage(response.message);
       setIsRegistering(false);
     } catch (error) {
@@ -146,7 +102,7 @@ const CanvasserApp = () => {
     }
   };
 
-  const handleSignIn = async (e) => {
+  const handleSignIn = async e => {
     e.preventDefault();
     try {
       const response = await loginUser(formData);
@@ -167,9 +123,9 @@ const CanvasserApp = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ location: checkinLocation, branch: selectedBranch })
+        body: JSON.stringify({ location: checkinLocation, branch: selectedBranch }),
       });
 
       if (!response.ok) {
@@ -180,20 +136,25 @@ const CanvasserApp = () => {
       const data = await response.json();
       setIsCheckedIn(true);
       setMessage(data.message);
-      fetchTodaySales();
     } catch (error) {
       console.error('Check-in error:', error);
       setMessage('Check-in failed. Please try again.');
     }
   };
+
   const handleCheckOut = async () => {
+    if (!isFeedbackSubmitted) {
+      setMessage('Please provide feedback before checking out.');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/supa/check-out`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
@@ -202,47 +163,52 @@ const CanvasserApp = () => {
 
       const data = await response.json();
       setIsCheckedIn(false);
-      setSales([]);
-      setMessage(data.message || 'Checked out. Sales reset.');
+      setMessage(data.message || 'Checked out successfully.');
     } catch (error) {
       console.error('Check-out error:', error);
       setMessage('Check-out failed. Please try again.');
     }
   };
 
-  const handleSaleSubmit = async (e) => {
+  const handleFeedbackChange = e => {
+    setFeedback(e.target.value);
+  };
+
+
+  const handleSubmitFeedback = async (e) => {
     e.preventDefault();
+    if (!feedback.trim()) {
+      setMessage('Please provide feedback before checking out.');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
-      const salesLocation = JSON.stringify(location);
-      const saleData = {
-        customerName: formData.name,
-        customerPhone: formData.phone,
-        location: salesLocation,
-        axaInsuranceCardSerial: formData.axaInsuranceCardSerial,
-        customerRemark: formData.customerRemark
+      const feedbackData = {
+        feedback: feedback,
       };
-      const response = await fetch(`${API_URL}/supa/record-sale`, {
+      const response = await fetch(`${API_URL}/supa/record-feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(saleData)
+        body: JSON.stringify(feedbackData)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to record sale');
+        throw new Error('Failed to record feedback');
       }
 
-      await fetchTodaySales(); // Refresh the sales after successful submission
-      setMessage('Sale recorded successfully!');
-      setFormData({ email: '', password: '', name: '', phone: '', deviceModel: '', axaInsuranceCardSerial: '' });
+      setMessage('Feedback recorded successfully!');
+      setFeedback('');
+      setIsFeedbackSubmitted(true);
     } catch (error) {
-      console.error('Error recording sale:', error);
-      setMessage('Failed to record sale. Please try again.');
+      console.error('Error recording feedback:', error);
+      setMessage('Failed to record feedback. Please try again.');
     }
   };
+
 
   const renderAuthForm = () => (
     <form onSubmit={isRegistering ? handleRegister : handleSignIn} className="mb-4">
@@ -324,221 +290,93 @@ const CanvasserApp = () => {
     </form>
   );
 
-  const renderCheckInOutButton = () => (
+  const renderFeedbackForm = () => (
     <div className="mb-4">
-      {isCheckedIn ? (
-        <button
-          onClick={handleCheckOut}
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          Check Out
-        </button>
-      ) : (
-        <button
-          onClick={handleCheckIn}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          Check In
-        </button>
-      )}
-    </div>
-  );
-
-
-
-  const renderSalesForm = () => (
-    <form onSubmit={handleSaleSubmit} className="mb-4">
-      <div className="mb-4">
-        <label className="block text-gray-700 font-bold mb-2" htmlFor="name">
-          Customer Name
-        </label>
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          placeholder="Customer Name"
-          className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700 font-bold mb-2" htmlFor="phone">
-          Customer Phone
-        </label>
-        <input
-          type="tel"
-          name="phone"
-          value={formData.phone}
-          onChange={handleInputChange}
-          placeholder="Customer Phone"
-          className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-gray-700 font-bold mb-2" htmlFor="axaInsuranceCardSerial">
-          AXA Insurance Card Serial
-        </label>
-        <input
-          type="text"
-          name="axaInsuranceCardSerial"
-          value={formData.axaInsuranceCardSerial}
-          onChange={handleInputChange}
-          placeholder="AXA Insurance Card Serial"
-          className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700 font-bold mb-2" htmlFor="customerRemark">
-          Customer Remark
-        </label>
-        <input
-          type="text"
-          name="customerRemark"
-          value={formData.customerRemark}
-          onChange={handleInputChange}
-          placeholder="Customer Remark"
-          className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
-        />
-      </div>
-      <button
-        type="submit"
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline"
-      >
-        Record Sale
-      </button>
-    </form>
-  );
-
-  const renderSalesList = () => (
-    <div className="flex flex-col gap-3">
-      <div className="max-w-sm w-full bg-gray-100 p-6 rounded-md shadow-md max-h-[80vh] overflow-y-auto">
-        <h1 className="text-lg font-semibold text-center">SLOT LOCATION</h1>
-        <h1 className="text-md font-bold text-center">{user?.slot_location}</h1>
-      </div>
-      <div className="max-w-sm w-full bg-gray-100 p-6 rounded-md shadow-md max-h-[80vh] overflow-y-auto">
-        <h2 className="text-xl font-semibold mb-4">Today&apos;s Sales: {sales.length}</h2>
-        {sales.map((sale, index) => (
-          <div key={index} className="mb-4 p-4 bg-white rounded-md shadow-sm">
-            <p className="font-medium">Sale at {new Date(sale.createdAt).toLocaleString()}</p>
-            <p>Customer: {sale.customer_name}</p>
-            <p>Phone: {sale.customer_phone}</p>
-            <p>AXA Insurance Card: {sale.axa_insurance_card_serial}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-
-  const renderTutorialModal = () => (
-    <div className={`fixed z-10 inset-0 overflow-y-auto ${showTutorial ? '' : 'hidden'}`}>
-      <div className="flex items-center justify-center min-h-screen px-4 py-6">
-        <div className="fixed inset-0 transition-opacity">
-          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-        <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
-          <div className="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div className="sm:flex sm:items-start">
-              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                <FaInfoCircle className="text-blue-600" />
-              </div>
-              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Insurance Card Activation Report Form
-                </h3>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500">
-                    Welcome to the Insurance Card Activation Report Form! Here are some steps to get you started:
-                  </p>
-                  <ul className="list-disc pl-5 mt-2 text-sm text-gray-500">
-                    <li>Register a new account or sign in with your existing credentials.</li>
-                    <li>If your account is new send a massage to activate your account and assign your slot location.</li>
-                    <li>Check in to your current location before starting your work.(YOUR DEVICE LOCATION BUT BE ON)</li>
-                    <li>Record sales by filling in the customer&apos;s details and device information.</li>
-                    <li>Check out at the end of the day to save your work for the day.</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              type="button"
-              onClick={() => setShowTutorial(false)}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
+      <label className="block text-gray-700 font-bold mb-2" htmlFor="feedback">
+        Feedback
+      </label>
+      <textarea
+        id="feedback"
+        value={feedback}
+        onChange={handleFeedbackChange}
+        placeholder="Please provide your feedback before checking out..."
+        className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        required
+      />
     </div>
   );
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen bg-gray-800 p-4 gap-6 sm:flex-row">
+    <div className="flex flex-col items-center justify-center w-full h-screen p-4 gap-6 sm:flex-row">
       <FaInfoCircle
         className="absolute top-3 left-3 text-red-500 text-2xl cursor-pointer"
         onClick={() => setShowTutorial(true)}
       />
-      {renderTutorialModal()}
-      <div className="max-w-sm w-full bg-white rounded-md shadow-md overflow-y-auto">
-        <div className="px-6 py-4 bg-gray-900 text-white">
-          <h1 className="text-lg font-bold text-center">Insurance Card Activation Report Form</h1>
+      {showTutorial && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+              onClick={() => setShowTutorial(false)}
+            >
+              &times;
+            </button>
+            <h2 className="text-lg font-bold mb-4">User Guide</h2>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                <strong>Check-In:</strong> Click &quot;Check In&quot; to confirm your attendance.
+              </li>
+              <li>
+                <strong>Provide Feedback:</strong> Please fill out the feedback form before checking out.
+              </li>
+              <li>
+                <strong>Check-Out:</strong> You can only check out after submitting your feedback.
+              </li>
+            </ul>
+          </div>
         </div>
-
-        <div className="px-6 py-4">
-          {message && (
-            <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
-              {message}
-            </div>
-          )}
-
-          {!user ? (
+      )}
+      {!user && (
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 lg:w-1/3">
+          <h1 className="text-2xl font-bold mb-4">Login/Register</h1>
+          {renderAuthForm()}
+          {message && <p className="text-red-500 mt-2">{message}</p>}
+        </div>
+      )}
+      {user && (
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 lg:w-1/3">
+          <h1 className="text-2xl font-bold mb-4">Welcome, {user.name}!</h1>
+          {!isCheckedIn ? (
             <>
-              {renderAuthForm()}
-              <button
-                onClick={() => setIsRegistering(!isRegistering)}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-full mt-4 focus:outline-none focus:shadow-outline"
-              >
-                {isRegistering ? 'Already have an account? Sign In' : 'New user? Register'}
-              </button>
-            </>
-          ) : !isCheckedIn ? (
-            <div>
-              {/* <BranchDropdown selectedBranch={selectedBranch} setSelectedBranch={setSelectedBranch} /> */}
               <button
                 onClick={handleCheckIn}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full mt-4 focus:outline-none focus:shadow-outline"
-                disabled={!location}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
               >
-                {location ? 'Check In' : 'Getting location...'}
+                Check In
               </button>
-            </div>
+            </>
           ) : (
             <>
-              {renderSalesForm()}
-
+              {renderFeedbackForm()}
+              <button
+                onClick={handleSubmitFeedback}
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
+              >
+                Submit Feedback
+              </button>
               <button
                 onClick={handleCheckOut}
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full mt-4 focus:outline-none focus:shadow-outline"
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
               >
                 Check Out
               </button>
             </>
           )}
+          {message && <p className="text-green-500 mt-2">{message}</p>}
         </div>
-      </div>
-
-      {isCheckedIn && renderSalesList()}
+      )}
     </div>
   );
-
 };
 
 export default CanvasserApp;
