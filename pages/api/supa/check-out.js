@@ -1,5 +1,3 @@
-
-// pages/api/check-in/check-out.js
 import { createClient } from '@supabase/supabase-js'
 import { verifyToken } from '@/utils/auth'
 
@@ -16,10 +14,30 @@ export default async function handler(req, res) {
             return res.status(401).json({ message: 'Unauthorized' })
         }
 
+        const { checkOutInformation } = req.body
+        console.log('Check-out information received on server:', checkOutInformation)
+
+        // Fetch the latest check-in entry for the user
+        const { data: checkInData, error: fetchError } = await supabase
+            .from('check_ins')
+            .select('id')
+            .eq('user_id', user.userId)
+            .order('check_in_time', { ascending: false })
+            .limit(1)
+            .single()
+
+        if (fetchError) throw fetchError
+        if (!checkInData) {
+            return res.status(404).json({ message: 'No check-in entry found for the user' })
+        }
+
+        // Update the latest check-in entry with the check-out information
         const { data, error } = await supabase
             .from('check_ins')
-            .update({ check_out_time: new Date() })
-            .match({ user_id: user.userId })
+            .update({
+                check_out_information: checkOutInformation, // Store check-out information
+            })
+            .eq('id', checkInData.id) // Update only the latest check-in entry
 
         if (error) throw error
 

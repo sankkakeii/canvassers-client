@@ -15,12 +15,19 @@ export default async function handler(req, res) {
             return res.status(401).json({ message: 'Unauthorized' })
         }
 
-        const { location, branch } = req.body
+        const { location, branch, distanceToBranch, isWithin400Meters } = req.body
 
         const { data, error } = await supabase
             .from('check_ins')
             .insert([
-                { user_id: user.userId, location, branch, check_in_time: new Date() }
+                {
+                    user_id: user.userId,
+                    location,
+                    branch,
+                    check_in_time: new Date(),
+                    distance_to_branch: distanceToBranch, // Store the distance to the branch
+                    within_400_meters: isWithin400Meters, // Store if the user was within 400 meters
+                }
             ])
 
         if (error) throw error

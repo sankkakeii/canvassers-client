@@ -18,6 +18,7 @@ const CanvasserApp = () => {
   const [selectedBranch, setSelectedBranch] = useState('');
   const [showTutorial, setShowTutorial] = useState(false);
   const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
+  const [branches, setBranches] = useState([]);
   const API_URL = '/api';
 
   useEffect(() => {
@@ -84,6 +85,7 @@ const CanvasserApp = () => {
         throw new Error(errorData.message || 'Login failed');
       }
 
+      fetchBranches();
       return response.json();
     } catch (error) {
       console.error('Login error:', error);
@@ -106,6 +108,8 @@ const CanvasserApp = () => {
     e.preventDefault();
     try {
       const response = await loginUser(formData);
+
+      console.log('USER OBJECT:::', response.user);
       setUser(response.user);
       localStorage.setItem('token', response.token);
       setMessage(`Welcome, ${response.user.name}!`);
@@ -114,10 +118,32 @@ const CanvasserApp = () => {
     }
   };
 
+
+
   const handleCheckIn = async () => {
     try {
       const token = localStorage.getItem('token');
       const checkinLocation = JSON.stringify(location);
+
+      // Find the branch with the matching address
+      const selectedBranch = branches.find(branch => branch.address === user.slot_location);
+
+      if (!selectedBranch) {
+        throw new Error('No matching branch found for your slot location');
+      }
+
+      // Check if user's location is within 600 meters of the branch location
+      const distance = getDistanceFromLatLonInMeters(location.latitude, location.longitude, selectedBranch.lat, selectedBranch.long);
+      console.log(`Distance to branch: ${distance} meters`);
+
+      let isWithin400Meters = false;
+      if (distance <= 400) {
+        isWithin400Meters = true;
+      }
+
+      // if (distance > 600) {
+      //     throw new Error('You are not within 600 meters of the branch location');
+      // }
 
       const response = await fetch(`${API_URL}/supa/check-in`, {
         method: 'POST',
@@ -125,7 +151,12 @@ const CanvasserApp = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ location: checkinLocation, branch: selectedBranch }),
+        body: JSON.stringify({
+          location: checkinLocation,
+          branch: selectedBranch,
+          isWithin400Meters: isWithin400Meters,
+          distanceToBranch: distance
+        }),
       });
 
       if (!response.ok) {
@@ -136,25 +167,64 @@ const CanvasserApp = () => {
       const data = await response.json();
       setIsCheckedIn(true);
       setMessage(data.message);
+
+      // Log the check-in details
+      console.log('Check-in successful:', {
+        userLocation: location,
+        branchLocation: selectedBranch,
+        distanceToBranch: distance,
+        isWithin400Meters: isWithin400Meters
+      });
+
+      return isWithin400Meters;
     } catch (error) {
       console.error('Check-in error:', error);
       setMessage('Check-in failed. Please try again.');
+      return false;
     }
   };
 
   const handleCheckOut = async () => {
     if (!isFeedbackSubmitted) {
       setMessage('Please provide feedback before checking out.');
-      return;
+      return false;
     }
 
     try {
       const token = localStorage.getItem('token');
+
+      // Find the branch with the matching address
+      const selectedBranch = branches.find(branch => branch.address === user.slot_location);
+
+      if (!selectedBranch) {
+        throw new Error('No matching branch found for your slot location');
+      }
+
+      // Check if user's location is within 400 meters of the branch location
+      const distance = getDistanceFromLatLonInMeters(location.latitude, location.longitude, selectedBranch.lat, selectedBranch.long);
+      console.log(`Distance to branch: ${distance} meters`);
+
+      let isWithin400Meters = false;
+      if (distance <= 400) {
+        isWithin400Meters = true;
+      }
+
+      const checkOutInformation = {
+        check_out_time: new Date(),
+        feedback: feedback,
+        distance_to_branch: distance,
+        is_within_400m: isWithin400Meters
+      };
+
       const response = await fetch(`${API_URL}/supa/check-out`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          checkOutInformation: checkOutInformation
+        }),
       });
 
       if (!response.ok) {
@@ -164,14 +234,62 @@ const CanvasserApp = () => {
       const data = await response.json();
       setIsCheckedIn(false);
       setMessage(data.message || 'Checked out successfully.');
+
+      // Log the check-out details
+      console.log('Check-out successful:', {
+        userLocation: location,
+        branchLocation: selectedBranch,
+        isWithin400Meters: isWithin400Meters
+      });
+
+      return isWithin400Meters;
     } catch (error) {
       console.error('Check-out error:', error);
       setMessage('Check-out failed. Please try again.');
+      return false;
     }
   };
 
+
+
+  function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Radius of the Earth in meters
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in meters
+    return distance;
+  }
+
+  function deg2rad(deg) {
+    return deg * (Math.PI / 180);
+  }
+
+
+
   const handleFeedbackChange = e => {
     setFeedback(e.target.value);
+  };
+
+  const fetchBranches = async () => {
+    try {
+      const response = await fetch(`${API_URL}/supa/admin/fetch-all-branches`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch branches');
+      const data = await response.json();
+      console.log('BRANCHES DATA:::::', data);
+      setBranches(data);
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      setMessage('Error fetching branches');
+    }
   };
 
 
