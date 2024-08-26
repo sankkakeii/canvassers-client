@@ -15,12 +15,14 @@ export default async function handler(req, res) {
             return res.status(401).json({ message: 'Unauthorized' })
         }
 
-        const { location, branch, distanceToBranch, isWithin400Meters } = req.body
+        const { name, email, location, branch, distanceToBranch, isWithin400Meters } = req.body
 
         const { data, error } = await supabase
             .from('check_ins')
             .insert([
                 {
+                    name: name,
+                    email: email,
                     user_id: user.userId,
                     location,
                     branch,

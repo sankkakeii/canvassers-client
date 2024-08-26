@@ -5,8 +5,8 @@ import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
 
 const CheckInChart = ({ checkIns }) => {
-    const labels = checkIns.map(checkIn => new Date(checkIn.check_in_time).toLocaleDateString());
-    const dataPoints = checkIns.map(checkIn => checkIn.user_id);
+    const labels = checkIns?.map(checkIn => new Date(checkIn.check_in_time).toLocaleDateString());
+    const dataPoints = checkIns?.map(checkIn => checkIn.user_id);
 
     const data = {
         labels,

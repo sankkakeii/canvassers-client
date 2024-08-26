@@ -152,6 +152,8 @@ const CanvasserApp = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          name: user.name,
+          email: user.email,
           location: checkinLocation,
           branch: selectedBranch,
           isWithin400Meters: isWithin400Meters,

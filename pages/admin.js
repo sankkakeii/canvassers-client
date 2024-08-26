@@ -212,25 +212,25 @@ const AdminApp = () => {
         (userFilter === 'all' || (userFilter === 'active' && user.active) || (userFilter === 'inactive' && !user.active))
     );
 
-    const filteredCheckIns = checkIns.filter(checkIn =>
-        checkIn.location.toLowerCase().includes(checkInSearch.toLowerCase()) ||
-        checkIn.branch.toLowerCase().includes(checkInSearch.toLowerCase())
-    ).reduce((acc, checkIn) => {
-        const existing = acc.find(item => item.user_id === checkIn.user_id);
-        if (existing) {
-            existing.check_in_time = new Date(Math.min(new Date(existing.check_in_time), new Date(checkIn.check_in_time))).toLocaleString();
-        } else {
-            acc.push({ ...checkIn, check_in_time: new Date(checkIn.check_in_time).toLocaleString() });
-        }
-        return acc;
-    }, []);
+    // const filteredCheckIns = checkIns.filter(checkIn =>
+    //     checkIn?.location?.toLowerCase().includes(checkInSearch.toLowerCase()) ||
+    //     checkIn?.branch?.toLowerCase().includes(checkInSearch.toLowerCase())
+    // ).reduce((acc, checkIn) => {
+    //     const existing = acc.find(item => item.user_id === checkIn.user_id);
+    //     if (existing) {
+    //         existing.check_in_time = new Date(Math.min(new Date(existing.check_in_time), new Date(checkIn.check_in_time))).toLocaleString();
+    //     } else {
+    //         acc.push({ ...checkIn, check_in_time: new Date(checkIn.check_in_time).toLocaleString() });
+    //     }
+    //     return acc;
+    // }, []);
 
     const filteredSales = sales.filter(sale =>
         sale.id.toString().toLowerCase().includes(saleSearch.toLowerCase())
     );
 
     const userPageData = getPageData(filteredUsers, currentPage);
-    const checkInPageData = getPageData(filteredCheckIns, currentPage);
+    // const checkInPageData = getPageData(filteredCheckIns, currentPage);
     const salesPageData = getPageData(filteredSales, currentPage);
 
     const renderContent = () => {
@@ -337,7 +337,7 @@ const AdminApp = () => {
                             </table>
                             <Pagination
                                 currentPage={currentPage}
-                                totalItems={filteredCheckIns.length}
+                                // totalItems={filteredCheckIns.length}
                                 itemsPerPage={ITEMS_PER_PAGE}
                                 onPageChange={setCurrentPage}
                             />
