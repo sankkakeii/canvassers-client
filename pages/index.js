@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FaInfoCircle } from 'react-icons/fa';
+import { Loader2, Info } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const CanvasserApp = () => {
   const [user, setUser] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
   const [location, setLocation] = useState(null);
   const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
@@ -14,10 +16,9 @@ const CanvasserApp = () => {
     name: '',
     phone: '',
   });
-  const [lastFetchDate, setLastFetchDate] = useState(new Date().toDateString());
   const [selectedBranch, setSelectedBranch] = useState('');
   const [showTutorial, setShowTutorial] = useState(false);
-  const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [branches, setBranches] = useState([]);
   const API_URL = '/api';
 
@@ -36,6 +37,7 @@ const CanvasserApp = () => {
     const checkLoginStatus = async () => {
       const token = localStorage.getItem('token');
       if (token) {
+        setIsLoading(true);
         try {
           const response = await fetch(`${API_URL}/supa/check-in`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -45,7 +47,9 @@ const CanvasserApp = () => {
             setIsCheckedIn(true);
           }
         } catch (error) {
-          console.error('Error checking login status:', error);
+          setMessage('Error checking login status.');
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -73,6 +77,7 @@ const CanvasserApp = () => {
   };
 
   const loginUser = async credentials => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}/supa/login`, {
         method: 'POST',
@@ -88,62 +93,52 @@ const CanvasserApp = () => {
       fetchBranches();
       return response.json();
     } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      setMessage(`Login failed: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRegister = async e => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const response = await registerUser(formData);
       setMessage(response.message);
       setIsRegistering(false);
     } catch (error) {
       setMessage('Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSignIn = async e => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const response = await loginUser(formData);
-
-      console.log('USER OBJECT:::', response.user);
       setUser(response.user);
       localStorage.setItem('token', response.token);
       setMessage(`Welcome, ${response.user.name}!`);
     } catch (error) {
       setMessage(`Login failed. ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-
-
   const handleCheckIn = async () => {
+    setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
       const checkinLocation = JSON.stringify(location);
 
-      // Find the branch with the matching address
       const selectedBranch = branches.find(branch => branch.address === user.slot_location);
+      if (!selectedBranch) throw new Error('No matching branch found for your slot location');
 
-      if (!selectedBranch) {
-        throw new Error('No matching branch found for your slot location');
-      }
-
-      // Check if user's location is within 600 meters of the branch location
       const distance = getDistanceFromLatLonInMeters(location.latitude, location.longitude, selectedBranch.lat, selectedBranch.long);
-      console.log(`Distance to branch: ${distance} meters`);
-
-      let isWithin400Meters = false;
-      if (distance <= 400) {
-        isWithin400Meters = true;
-      }
-
-      // if (distance > 600) {
-      //     throw new Error('You are not within 600 meters of the branch location');
-      // }
+      const isWithin400Meters = distance <= 400;
 
       const response = await fetch(`${API_URL}/supa/check-in`, {
         method: 'POST',
@@ -156,33 +151,20 @@ const CanvasserApp = () => {
           email: user.email,
           location: checkinLocation,
           branch: selectedBranch,
-          isWithin400Meters: isWithin400Meters,
+          isWithin400Meters,
           distanceToBranch: distance
         }),
       });
 
-      if (!response.ok) {
-        console.error('Check-in error:', response);
-        throw new Error('Check-in failed');
-      }
+      if (!response.ok) throw new Error('Check-in failed');
 
       const data = await response.json();
       setIsCheckedIn(true);
       setMessage(data.message);
-
-      // Log the check-in details
-      console.log('Check-in successful:', {
-        userLocation: location,
-        branchLocation: selectedBranch,
-        distanceToBranch: distance,
-        isWithin400Meters: isWithin400Meters
-      });
-
-      return isWithin400Meters;
     } catch (error) {
-      console.error('Check-in error:', error);
       setMessage('Check-in failed. Please try again.');
-      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -252,9 +234,7 @@ const CanvasserApp = () => {
     }
   };
 
-
-
-  function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+  const getDistanceFromLatLonInMeters = (lat1, lon1, lat2, lon2) => {
     const R = 6371e3; // Radius of the Earth in meters
     const dLat = deg2rad(lat2 - lat1);
     const dLon = deg2rad(lon2 - lon1);
@@ -263,37 +243,27 @@ const CanvasserApp = () => {
       Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in meters
-    return distance;
-  }
-
-  function deg2rad(deg) {
-    return deg * (Math.PI / 180);
-  }
-
-
-
-  const handleFeedbackChange = e => {
-    setFeedback(e.target.value);
+    return R * c; // Distance in meters
   };
+
+  const deg2rad = deg => deg * (Math.PI / 180);
+
+  const handleFeedbackChange = e => setFeedback(e.target.value);
 
   const fetchBranches = async () => {
     try {
       const response = await fetch(`${API_URL}/supa/admin/fetch-all-branches`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
       if (!response.ok) throw new Error('Failed to fetch branches');
       const data = await response.json();
-      console.log('BRANCHES DATA:::::', data);
       setBranches(data);
     } catch (error) {
-      console.error('Error fetching branches:', error);
       setMessage('Error fetching branches');
     }
   };
-
 
   const handleSubmitFeedback = async (e) => {
     e.preventDefault();
@@ -324,14 +294,20 @@ const CanvasserApp = () => {
       setFeedback('');
       setIsFeedbackSubmitted(true);
     } catch (error) {
+      console.log('Error recording feedback:', error);
       console.error('Error recording feedback:', error);
       setMessage('Failed to record feedback. Please try again.');
     }
   };
 
-
   const renderAuthForm = () => (
-    <form onSubmit={isRegistering ? handleRegister : handleSignIn} className="mb-4">
+    <motion.form 
+      onSubmit={isRegistering ? handleRegister : handleSignIn}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="mb-4"
+    >
       <div className="mb-4">
         <label className="block text-gray-700 font-bold mb-2" htmlFor="email">
           Email Address
@@ -407,11 +383,16 @@ const CanvasserApp = () => {
           {isRegistering ? 'Already have an account?' : 'Create an account'}
         </button>
       </div>
-    </form>
+    </motion.form>
   );
 
   const renderFeedbackForm = () => (
-    <div className="mb-4">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="mb-4"
+    >
       <label className="block text-gray-700 font-bold mb-2" htmlFor="feedback">
         Feedback
       </label>
@@ -423,17 +404,22 @@ const CanvasserApp = () => {
         className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         required
       />
-    </div>
+    </motion.div>
   );
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen p-4 gap-6 sm:flex-row">
-      <FaInfoCircle
-        className="absolute top-3 left-3 text-red-500 text-2xl cursor-pointer"
+    <div className="flex flex-col items-center justify-center w-full h-screen p-4 gap-6 bg-gradient-to-r from-blue-100 to-purple-200 sm:flex-row">
+      <Info
+        className="absolute top-3 left-3 text-purple-500 text-2xl cursor-pointer"
         onClick={() => setShowTutorial(true)}
       />
       {showTutorial && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        >
           <div className="bg-white p-6 rounded-lg shadow-lg relative">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
@@ -454,17 +440,27 @@ const CanvasserApp = () => {
               </li>
             </ul>
           </div>
-        </div>
+        </motion.div>
       )}
       {!user && (
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 lg:w-1/3">
+        <motion.div 
+          initial={{ x: -200, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 lg:w-1/3"
+        >
           <h1 className="text-2xl font-bold mb-4">Login/Register</h1>
           {renderAuthForm()}
           {message && <p className="text-red-500 mt-2">{message}</p>}
-        </div>
+        </motion.div>
       )}
       {user && (
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 lg:w-1/3">
+        <motion.div
+          initial={{ x: 200, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white p-6 rounded-lg shadow-lg w-full sm:w-1/2 lg:w-1/3"
+        >
           <h1 className="text-2xl font-bold mb-4">Welcome, {user.name}!</h1>
           {!isCheckedIn ? (
             <>
@@ -472,7 +468,7 @@ const CanvasserApp = () => {
                 onClick={handleCheckIn}
                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
               >
-                Check In
+                {isLoading ? <Loader2 className="animate-spin" /> : 'Check In'}
               </button>
             </>
           ) : (
@@ -482,18 +478,18 @@ const CanvasserApp = () => {
                 onClick={handleSubmitFeedback}
                 className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
               >
-                Submit Feedback
+                {isLoading ? <Loader2 className="animate-spin" /> : 'Submit Feedback'}
               </button>
               <button
                 onClick={handleCheckOut}
                 className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
               >
-                Check Out
+                {isLoading ? <Loader2 className="animate-spin" /> : 'Check Out'}
               </button>
             </>
           )}
           {message && <p className="text-green-500 mt-2">{message}</p>}
-        </div>
+        </motion.div>
       )}
     </div>
   );
