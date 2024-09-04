@@ -44,7 +44,8 @@ const BranchDropdown = ({ selectedBranch, setSelectedBranch }) => {
 };
 
 const Sidebar = ({ activeSection, setActiveSection }) => {
-    const sections = ['Overview', 'Users', 'Check-Ins', 'Sales'];
+    // const sections = ['Overview', 'Users', 'Check-Ins', 'Sales', 'Feedback'];
+    const sections = ['Overview', 'Users', 'Feedback'];
     return (
         <aside className=" fixed top-0 left-0 w-64 bg-gray-800 text-white h-screen p-4">
             <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
@@ -116,12 +117,14 @@ const AdminApp = () => {
     const [userFilter, setUserFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [activeSection, setActiveSection] = useState('Overview');
+    const [feedbackData, setFeedbackData] = useState([]);
     const API_URL = '/api';
 
     useEffect(() => {
         fetchUsers();
         fetchCheckIns();
         fetchSales();
+        fetchFeedback();
     }, []);
 
     const fetchUsers = async () => {
@@ -150,6 +153,22 @@ const AdminApp = () => {
             if (!response.ok) throw new Error('Failed to fetch check-ins');
             const data = await response.json();
             setCheckIns(data);
+        } catch (error) {
+            console.error('Error fetching check-ins:', error);
+            setMessage('Error fetching check-ins');
+        }
+    };
+
+    const fetchFeedback = async () => {
+        try {
+            const response = await fetch(`${API_URL}/supa/admin/fetch-all-feedbacks`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (!response.ok) throw new Error('Failed to fetch check-ins');
+            const data = await response.json();
+            setFeedbackData(data);
         } catch (error) {
             console.error('Error fetching check-ins:', error);
             setMessage('Error fetching check-ins');
@@ -394,7 +413,53 @@ const AdminApp = () => {
                     {/* <SalesChart sales={sales} /> */}
                 </div>
             );
-        default:
+            case 'Feedback':
+                return (
+                    <div>
+                        <h2 className="text-xl font-semibold mb-2">Feedback Data</h2>
+                        {/* <div className="mb-4 flex gap-4">
+                            <Input
+                                placeholder="Search users..."
+                                value={userSearch}
+                                onChange={(e) => setUserSearch(e.target.value)}
+                                className="max-w-sm"
+                            />
+                        </div> */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full table-auto border-collapse border border-gray-200">
+                                <thead>
+                                    <tr className="bg-gray-200">
+                                        <th className="border p-2 text-left">Name</th>
+                                        <th className="border p-2 text-left">sales</th>
+                                        <th className="border p-2 text-left">Reason</th>
+                                        <th className="border p-2 text-left">Improvement</th>
+                                        <th className="border p-2 text-left">Extra Feedback</th>
+                                        <th className="border p-2 text-left">Slot Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {feedbackData.map(feedback => (
+                                        <tr key={feedback.id} className="hover:bg-gray-100">
+                                            <td className="border p-2">{feedback.name}</td>
+                                            <td className="border p-2">{feedback.sales}</td>
+                                            <td className="border p-2">{feedback.reason}</td>
+                                            <td className="border p-2">{feedback.improvement}</td>
+                                            <td className="border p-2">{feedback.extra_feedback}</td>
+                                            <td className="border p-2">{feedback.slot_location}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalItems={feedbackData.length}
+                                itemsPerPage={ITEMS_PER_PAGE}
+                                onPageChange={setCurrentPage}
+                            />
+                        </div>
+                    </div>
+                );
+            default:
             return <div>Select a section from the sidebar</div>;
     }
 };

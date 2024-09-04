@@ -267,8 +267,11 @@ const CanvasserApp = () => {
 
 
   const handleSubmitFeedback = async (e) => {
-    console.log(feedbackData);
+    console.log(user);
     e.preventDefault();
+    feedbackData.name = user.name;
+    feedbackData.email = user.email;
+    feedbackData.slot_location = user.slot_location;
     if (!feedbackData.sales.trim()) {
       setMessage('Please provide feedback before submitting.');
       return;

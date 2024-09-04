@@ -10,6 +10,7 @@ export default async function handler(req, res) {
     const { feedbackData } = req.body;
 
     const user = verifyToken(req);
+
     if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -18,7 +19,16 @@ export default async function handler(req, res) {
     try {
         const { data, error } = await supabase
             .from('feedback_duplicate')
-            .insert([{ user_id: user.userId, sales: feedbackData.sales, reason: feedbackData.reason, improvement: feedbackData.improvement, extra_feedback: feedbackData.extraFeedback }]);
+            .insert([{
+                user_id: user.userId,
+                sales: feedbackData.sales,
+                name: feedbackData.name,
+                email: feedbackData.email,
+                slot_location: feedbackData.slot_location,
+                reason: feedbackData.reason,
+                improvement: feedbackData.improvement,
+                extra_feedback: feedbackData.extraFeedback
+            }]);
 
         if (error) {
             throw error;
