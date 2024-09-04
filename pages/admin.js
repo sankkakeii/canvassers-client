@@ -45,7 +45,7 @@ const BranchDropdown = ({ selectedBranch, setSelectedBranch }) => {
 
 const Sidebar = ({ activeSection, setActiveSection }) => {
     // const sections = ['Overview', 'Users', 'Check-Ins', 'Sales', 'Feedback'];
-    const sections = ['Overview', 'Users', 'Feedback'];
+    const sections = ['Overview', 'Users', 'Check-Ins', 'Feedback'];
     return (
         <aside className=" fixed top-0 left-0 w-64 bg-gray-800 text-white h-screen p-4">
             <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
@@ -231,25 +231,25 @@ const AdminApp = () => {
         (userFilter === 'all' || (userFilter === 'active' && user.active) || (userFilter === 'inactive' && !user.active))
     );
 
-    // const filteredCheckIns = checkIns.filter(checkIn =>
-    //     checkIn?.location?.toLowerCase().includes(checkInSearch.toLowerCase()) ||
-    //     checkIn?.branch?.toLowerCase().includes(checkInSearch.toLowerCase())
-    // ).reduce((acc, checkIn) => {
-    //     const existing = acc.find(item => item.user_id === checkIn.user_id);
-    //     if (existing) {
-    //         existing.check_in_time = new Date(Math.min(new Date(existing.check_in_time), new Date(checkIn.check_in_time))).toLocaleString();
-    //     } else {
-    //         acc.push({ ...checkIn, check_in_time: new Date(checkIn.check_in_time).toLocaleString() });
-    //     }
-    //     return acc;
-    // }, []);
+    const filteredCheckIns = checkIns.filter(checkIn =>
+        // checkIn?.location?.toLowerCase().includes(checkInSearch.toLowerCase()) ||
+        checkIn?.branch?.toLowerCase().includes(checkInSearch.toLowerCase())
+    ).reduce((acc, checkIn) => {
+        const existing = acc.find(item => item.user_id === checkIn.user_id);
+        if (existing) {
+            existing.check_in_time = new Date(Math.min(new Date(existing.check_in_time), new Date(checkIn.check_in_time))).toLocaleString();
+        } else {
+            acc.push({ ...checkIn, check_in_time: new Date(checkIn.check_in_time).toLocaleString() });
+        }
+        return acc;
+    }, []);
 
     const filteredSales = sales.filter(sale =>
         sale.id.toString().toLowerCase().includes(saleSearch.toLowerCase())
     );
 
     const userPageData = getPageData(filteredUsers, currentPage);
-    // const checkInPageData = getPageData(filteredCheckIns, currentPage);
+    const checkInPageData = getPageData(filteredCheckIns, currentPage);
     const salesPageData = getPageData(filteredSales, currentPage);
 
     const renderContent = () => {
@@ -356,7 +356,7 @@ const AdminApp = () => {
                             </table>
                             <Pagination
                                 currentPage={currentPage}
-                                // totalItems={filteredCheckIns.length}
+                                totalItems={filteredCheckIns.length}
                                 itemsPerPage={ITEMS_PER_PAGE}
                                 onPageChange={setCurrentPage}
                             />
