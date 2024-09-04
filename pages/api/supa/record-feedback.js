@@ -7,21 +7,18 @@ export default async function handler(req, res) {
         return res.status(405).json({ message: 'Method not allowed' });
     }
 
-    const token = req.headers.authorization.split(' ')[1];
-
-    const { feedback  } = req.body;
+    const { feedbackData } = req.body;
 
     const user = verifyToken(req);
     if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    console.log(feedback);
 
     try {
         const { data, error } = await supabase
-            .from('feedback')
-            .insert([{ user_id: user.userId, feedback: feedback }]);
+            .from('feedback_duplicate')
+            .insert([{ user_id: user.userId, sales: feedbackData.sales, reason: feedbackData.reason, improvement: feedbackData.improvement, extra_feedback: feedbackData.extraFeedback }]);
 
         if (error) {
             throw error;

@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         const { name, email, location, branch, distanceToBranch, isWithin400Meters } = req.body
 
         const { data, error } = await supabase
-            .from('check_ins')
+            .from('check_ins_duplicate')
             .insert([
                 {
                     name: name,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Info } from 'lucide-react';
+import { Loader2, Info, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const CanvasserApp = () => {
@@ -265,41 +265,44 @@ const CanvasserApp = () => {
     }
   };
 
+
   const handleSubmitFeedback = async (e) => {
+    console.log(feedbackData);
     e.preventDefault();
-    if (!feedback.trim()) {
-      setMessage('Please provide feedback before checking out.');
+    if (!feedbackData.sales.trim()) {
+      setMessage('Please provide feedback before submitting.');
       return;
     }
-
+  
     try {
       const token = localStorage.getItem('token');
-      const feedbackData = {
-        feedback: feedback,
-      };
       const response = await fetch(`${API_URL}/supa/record-feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(feedbackData)
+        body: JSON.stringify({feedbackData: feedbackData })
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to record feedback');
       }
-
+  
       setMessage('Feedback recorded successfully!');
-      setFeedback('');
+      setFeedbackData({
+        sales: '',
+        reason: '',
+        improvement: '',
+        extraFeedback: '',
+      });
       setIsFeedbackSubmitted(true);
     } catch (error) {
-      console.log('Error recording feedback:', error);
       console.error('Error recording feedback:', error);
       setMessage('Failed to record feedback. Please try again.');
     }
   };
-
+  
   const renderAuthForm = () => (
     <motion.form 
       onSubmit={isRegistering ? handleRegister : handleSignIn}
@@ -386,35 +389,127 @@ const CanvasserApp = () => {
     </motion.form>
   );
 
-  const renderFeedbackForm = () => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="mb-4"
-    >
-      <label className="block text-gray-700 font-bold mb-2" htmlFor="feedback">
-        Feedback
-      </label>
-      <textarea
-        id="feedback"
-        value={feedback}
-        onChange={handleFeedbackChange}
-        placeholder="Please provide your feedback before checking out..."
-        className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        required
-      />
-    </motion.div>
-  );
+  const [feedbackData, setFeedbackData] = useState({
+    sales: '',
+    reason: '',
+    improvement: '',
+    extraFeedback: '',
+  });
+  
+  const renderFeedbackForm = () => {
+    const target = 20; // Target value
+  
+    const handleFeedbackInputChange = (e) => {
+      const { name, value } = e.target;
+      setFeedbackData(prevState => ({
+        ...prevState,
+        [name]: value,
+      }));
+    };
+  
+    return (
+      <form onSubmit={handleSubmitFeedback} className="mb-2">
+        <div className="mb-4">
+          <label className="block text-gray-700 font-bold mb-2" htmlFor="sales">
+            How many did you sell?
+          </label>
+          <p className="text-gray-500 mb-2">Target: {target}</p>
+          <input
+            type="number"
+            name="sales"
+            value={feedbackData.sales}
+            onChange={handleFeedbackInputChange}
+            placeholder="Enter number of sales"
+            className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+  
+        {feedbackData.sales > target && (
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2" htmlFor="reason">
+              Why did you sell above the target?
+            </label>
+            <textarea
+              name="reason"
+              value={feedbackData.reason}
+              onChange={handleFeedbackInputChange}
+              placeholder="Explain why you sold above target"
+              className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+        )}
+  
+        {feedbackData.sales <= target && (
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2" htmlFor="reason">
+              Why did you sell below the target?
+            </label>
+            <textarea
+              name="reason"
+              value={feedbackData.reason}
+              onChange={handleFeedbackInputChange}
+              placeholder="Explain why you sold below target"
+              className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+        )}
+  
+        <div className="mb-4">
+          <label className="block text-gray-700 font-bold mb-2" htmlFor="improvement">
+            What will improve your sales?
+          </label>
+          <textarea
+            name="improvement"
+            value={feedbackData.improvement}
+            onChange={handleFeedbackInputChange}
+            placeholder="Suggestions for improvement"
+            className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+  
+        <div className="mb-4">
+          <label className="block text-gray-700 font-bold mb-2" htmlFor="extraFeedback">
+            Any extra feedback?
+          </label>
+          <textarea
+            name="extraFeedback"
+            value={feedbackData.extraFeedback}
+            onChange={handleFeedbackInputChange}
+            placeholder="Additional feedback"
+            className="appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
+        </div>
+  
+        <button
+          type="submit"
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
+        >
+          Submit Feedback
+        </button>
+      </form>
+    );
+  };
+
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen p-4 gap-6 bg-gradient-to-r from-blue-100 to-purple-200 sm:flex-row">
+    // <div className="flex flex-col items-center justify-center w-full h-screen p-4 gap-6 bg-gradient-to-r from-blue-100 to-purple-200 sm:flex-row">
+    <div className="flex flex-col items-center justify-center w-full p-4 gap-6 bg-gradient-to-r from-blue-100 to-purple-200 sm:flex-row">
       <Info
         className="absolute top-3 left-3 text-purple-500 text-2xl cursor-pointer"
         onClick={() => setShowTutorial(true)}
       />
+
+      <X
+        className="absolute top-3 right-3 text-red-500 text-2xl cursor-pointer"
+        onClick={() => handleCheckOut}
+      />
+
       {showTutorial && (
-        <motion.div 
+        <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.3 }}
@@ -466,7 +561,7 @@ const CanvasserApp = () => {
             <>
               <button
                 onClick={handleCheckIn}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+                className="bg-blue-500 hover:bg-blue-700 text-white text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Check In'}
               </button>
@@ -474,7 +569,7 @@ const CanvasserApp = () => {
           ) : (
             <>
               {renderFeedbackForm()}
-              <button
+              {/* <button
                 onClick={handleSubmitFeedback}
                 className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
               >
@@ -485,7 +580,7 @@ const CanvasserApp = () => {
                 className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Check Out'}
-              </button>
+              </button> */}
             </>
           )}
           {message && <p className="text-green-500 mt-2">{message}</p>}
