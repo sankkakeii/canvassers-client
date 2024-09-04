@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
         // Fetch the latest check-in entry for the user
         const { data: checkInData, error: fetchError } = await supabase
-            .from('check_ins')
+            .from('check_ins_duplicate')
             .select('id')
             .eq('user_id', user.userId)
             .order('check_in_time', { ascending: false })
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
         // Update the latest check-in entry with the check-out information
         const { data, error } = await supabase
-            .from('check_ins')
+            .from('check_ins_duplicate')
             .update({
                 check_out_information: checkOutInformation, // Store check-out information
             })

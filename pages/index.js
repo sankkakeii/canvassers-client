@@ -410,10 +410,10 @@ const CanvasserApp = () => {
     return (
       <form onSubmit={handleSubmitFeedback} className="mb-2">
         <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2" htmlFor="sales">
+          <label className="block text-gray-700 font-bold mb-1" htmlFor="sales">
             How many did you sell?
           </label>
-          <p className="text-gray-500 mb-2">Target: {target}</p>
+          <p className="text-gray-500 mb-1">Target: {target}</p>
           <input
             type="number"
             name="sales"
@@ -426,7 +426,7 @@ const CanvasserApp = () => {
         </div>
   
         {feedbackData.sales > target && (
-          <div className="mb-4">
+          <div className="mb-2">
             <label className="block text-gray-700 font-bold mb-2" htmlFor="reason">
               Why did you sell above the target?
             </label>
@@ -442,7 +442,7 @@ const CanvasserApp = () => {
         )}
   
         {feedbackData.sales <= target && (
-          <div className="mb-4">
+          <div className="mb-2">
             <label className="block text-gray-700 font-bold mb-2" htmlFor="reason">
               Why did you sell below the target?
             </label>
@@ -457,7 +457,7 @@ const CanvasserApp = () => {
           </div>
         )}
   
-        <div className="mb-4">
+        <div className="mb-2">
           <label className="block text-gray-700 font-bold mb-2" htmlFor="improvement">
             What will improve your sales?
           </label>
@@ -471,7 +471,7 @@ const CanvasserApp = () => {
           />
         </div>
   
-        <div className="mb-4">
+        <div className="mb-2">
           <label className="block text-gray-700 font-bold mb-2" htmlFor="extraFeedback">
             Any extra feedback?
           </label>
@@ -486,7 +486,7 @@ const CanvasserApp = () => {
   
         <button
           type="submit"
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-2"
         >
           Submit Feedback
         </button>
@@ -503,10 +503,10 @@ const CanvasserApp = () => {
         onClick={() => setShowTutorial(true)}
       />
 
-      <X
+      {/* <X
         className="absolute top-3 right-3 text-red-500 text-2xl cursor-pointer"
         onClick={() => handleCheckOut}
-      />
+      /> */}
 
       {showTutorial && (
         <motion.div
@@ -574,13 +574,13 @@ const CanvasserApp = () => {
                 className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Submit Feedback'}
-              </button>
+              </button> */}
               <button
                 onClick={handleCheckOut}
-                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-4"
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full mt-1"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Check Out'}
-              </button> */}
+              </button>
             </>
           )}
           {message && <p className="text-green-500 mt-2">{message}</p>}
