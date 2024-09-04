@@ -496,8 +496,8 @@ const CanvasserApp = () => {
 
 
   return (
-    // <div className="flex flex-col items-center justify-center w-full h-screen p-4 gap-6 bg-gradient-to-r from-blue-100 to-purple-200 sm:flex-row">
-    <div className="flex flex-col items-center justify-center w-full p-4 gap-6 bg-gradient-to-r from-blue-100 to-purple-200 sm:flex-row">
+        // <div className="flex flex-col items-center justify-center w-full h-screen p-4 gap-6 bg-gradient-to-r from-blue-100 to-purple-200 sm:flex-row">
+    <div className="flex flex-col items-center justify-center w-full h-screen p-4 gap-6 bg-gradient-to-r from-blue-100 to-purple-200 sm:flex-row">
       <Info
         className="absolute top-3 left-3 text-purple-500 text-2xl cursor-pointer"
         onClick={() => setShowTutorial(true)}
