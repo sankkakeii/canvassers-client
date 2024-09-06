@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
         try {
             const { data, error } = await supabase
-                .from('check_ins_duplicate')
+                .from('canvasser_check_ins')
                 .select('*')
                 .order('check_in_time', { ascending: false })
 
