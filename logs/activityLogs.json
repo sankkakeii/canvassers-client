@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": "2024-09-09T08:57:53.466Z",
+    "logType": "ERROR",
+    "message": "Invalid request method for check-in",
+    "method": "GET"
+  },
+  {
+    "timestamp": "2024-09-09T08:57:53.485Z",
+    "logType": "ERROR",
+    "message": "Invalid request method for check-in",
+    "method": "GET"
+  },
+  {
+    "timestamp": "2024-09-09T08:57:55.951Z",
+    "logType": "SUCCESS",
+    "message": "User logged in successfully",
+    "userId": 48
+  },
+  {
+    "timestamp": "2024-09-09T08:58:00.369Z",
+    "logType": "SUCCESS",
+    "message": "User checked in successfully",
+    "userId": 48
+  },
+  {
+    "timestamp": "2024-09-09T08:58:13.649Z",
+    "logType": "SUCCESS",
+    "message": "Feedback recorded successfully",
+    "userId": 48
+  }
+]
