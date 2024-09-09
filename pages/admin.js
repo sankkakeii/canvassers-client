@@ -9,6 +9,7 @@ import CheckInChart from '@/components/admin-components/CheckInChart';
 import SalesChart from '@/components/admin-components/SalesChart';
 import UserSalesChart from '@/components/admin-components/UserSalesChart';
 import SalesOverTimeChart from '@/components/admin-components/SalesOverTimeChart';
+import CheckinDataComponent from '@/components/updated/CheckinComponent';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -320,49 +321,51 @@ const AdminApp = () => {
                 );
             case 'Check-Ins':
                 return (
-                    <div>
-                        <h2 className="text-xl font-semibold mb-2">Check-Ins</h2>
-                        <Input
-                            placeholder="Search check-ins..."
-                            value={checkInSearch}
-                            onChange={(e) => setCheckInSearch(e.target.value)}
-                            className="max-w-sm mb-4"
-                        />
-                        <div className="overflow-x-auto">
-                            <table className="w-full table-auto border-collapse border border-gray-200">
-                                <thead>
-                                    <tr className="bg-gray-200">
-                                        <th className="border p-2 text-left">Check-In Time</th>
-                                        <th className="border p-2 text-left">User ID</th>
-                                        <th className="border p-2 text-left">User Name</th>
-                                        <th className="border p-2 text-left">Location</th>
-                                        <th className="border p-2 text-left">Branch</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {checkInPageData.map(checkIn => {
-                                        const user = getUserById(checkIn.user_id);
-                                        return (
-                                            <tr key={checkIn.id} className="hover:bg-gray-100">
-                                                <td className="border p-2">{checkIn.check_in_time}</td>
-                                                <td className="border p-2">{checkIn.user_id}</td>
-                                                <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
-                                                <td className="border p-2">{checkIn.location}</td>
-                                                <td className="border p-2">{checkIn.branch}</td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                            <Pagination
-                                currentPage={currentPage}
-                                totalItems={filteredCheckIns.length}
-                                itemsPerPage={ITEMS_PER_PAGE}
-                                onPageChange={setCurrentPage}
-                            />
-                        </div>
-                        <CheckInChart checkIns={filteredCheckIns} />
-                    </div>
+                    // <div>
+                    //     <h2 className="text-xl font-semibold mb-2">Check-Ins</h2>
+                    //     <Input
+                    //         placeholder="Search check-ins..."
+                    //         value={checkInSearch}
+                    //         onChange={(e) => setCheckInSearch(e.target.value)}
+                    //         className="max-w-sm mb-4"
+                    //     />
+                    //     <div className="overflow-x-auto">
+                    //         <table className="w-full table-auto border-collapse border border-gray-200">
+                    //             <thead>
+                    //                 <tr className="bg-gray-200">
+                    //                     <th className="border p-2 text-left">Check-In Time</th>
+                    //                     <th className="border p-2 text-left">User ID</th>
+                    //                     <th className="border p-2 text-left">User Name</th>
+                    //                     <th className="border p-2 text-left">Location</th>
+                    //                     <th className="border p-2 text-left">Branch</th>
+                    //                 </tr>
+                    //             </thead>
+                    //             <tbody>
+                    //                 {checkInPageData.map(checkIn => {
+                    //                     const user = getUserById(checkIn.user_id);
+                    //                     return (
+                    //                         <tr key={checkIn.id} className="hover:bg-gray-100">
+                    //                             <td className="border p-2">{checkIn.check_in_time}</td>
+                    //                             <td className="border p-2">{checkIn.user_id}</td>
+                    //                             <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
+                    //                             <td className="border p-2">{checkIn.location}</td>
+                    //                             <td className="border p-2">{checkIn.branch}</td>
+                    //                         </tr>
+                    //                     );
+                    //                 })}
+                    //             </tbody>
+                    //         </table>
+                    //         <Pagination
+                    //             currentPage={currentPage}
+                    //             totalItems={filteredCheckIns.length}
+                    //             itemsPerPage={ITEMS_PER_PAGE}
+                    //             onPageChange={setCurrentPage}
+                    //         />
+                    //     </div>
+                    //     <CheckInChart checkIns={filteredCheckIns} />
+                    // </div>
+
+                    <CheckinDataComponent />
                 );
             case 'Sales':
                 return (<div>
