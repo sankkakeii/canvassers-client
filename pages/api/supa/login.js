@@ -198,10 +198,10 @@ export default async function handler(req, res) {
         // Remove sensitive information from user object
         delete user.password;
 
-        await logActivity('SUCCESS', 'User logged in successfully', { userId: user.id });
+        await logActivity('SUCCESS', 'User logged in successfully', { userId: user.id, email });
         res.status(200).json({ user, token });
     } catch (error) {
-        await logActivity('ERROR', 'An error occurred during login', { error: error.message });
+        await logActivity('ERROR', 'An error occurred during login', { error: error.message, email, userId: user?.id });
         console.error('Login error:', error);
         res.status(500).json({ message: 'An error occurred during login' });
     }

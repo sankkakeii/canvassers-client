@@ -52,14 +52,14 @@ export default async function handler(req, res) {
             }]);
 
         if (error) {
-            await logActivity('ERROR', 'Database insertion error during feedback recording', { error });
+            await logActivity('ERROR', 'Database insertion error during feedback recording', { error, userId: user.userId });
             throw error;
         }
 
         await logActivity('SUCCESS', 'Feedback recorded successfully', { userId: user.userId });
         res.status(200).json({ message: 'Feedback recorded successfully', data });
     } catch (error) {
-        await logActivity('ERROR', 'An error occurred during feedback submission', { error: error.message });
+        await logActivity('ERROR', 'An error occurred during feedback submission', { error: error.message, userId: user.userId });
         console.error(error);
         res.status(400).json({ message: error.message });
     }

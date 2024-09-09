@@ -27,7 +27,7 @@ const logActivity = async (logType, message, additionalInfo = {}) => {
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        await logActivity('ERROR', 'Invalid request method for check-in', { method: req.method });
+        // await logActivity('ERROR', 'Invalid request method for check-in', { method: req.method });
         return res.status(405).json({ message: 'Method not allowed' });
     }
 
@@ -56,14 +56,14 @@ export default async function handler(req, res) {
             ]);
 
         if (error) {
-            await logActivity('ERROR', 'Database insertion error during check-in', { error });
+            await logActivity('ERROR', 'Database insertion error during check-in', { error, userId: user.userId, name, email });
             throw error;
         }
 
         await logActivity('SUCCESS', 'User checked in successfully', { userId: user.userId, name, email });
         res.status(200).json({ message: 'Checked in successfully' });
     } catch (error) {
-        await logActivity('ERROR', 'An error occurred during check-in', { error: error.message });
+        await logActivity('ERROR', 'An error occurred during check-in', { error: error.message, userId: user.userId, name, email });
         console.error('Check-in error:', error);
         res.status(500).json({ message: 'An error occurred during check-in' });
     }
