@@ -1,37 +1,31 @@
 import { supabase } from "@/utils/superbase";
 import { verifyToken } from '@/utils/auth'
-import fs from 'fs'
-import path from 'path'
 
-// Logging function to write logs to a JSON file
-const logActivity = (logType, message, additionalInfo = {}) => {
+// Logging function to write logs to Supabase
+const logActivity = async (logType, message, additionalInfo = {}) => {
     const logEntry = {
         timestamp: new Date().toISOString(),
-        logType,
+        log_type: logType,
         message,
-        ...additionalInfo
+        additional_info: additionalInfo
     };
 
-    const logFilePath = path.join(process.cwd(), 'logs', 'feedbackLogs.json');
+    try {
+        const { error } = await supabase
+            .from('canvassers_feedback_logs')
+            .insert([logEntry]);
 
-    // Ensure the logs directory exists
-    if (!fs.existsSync(path.dirname(logFilePath))) {
-        fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
+        if (error) {
+            console.error('Error inserting log:', error);
+        }
+    } catch (err) {
+        console.error('Error logging activity:', err);
     }
-
-    // Read existing logs
-    const existingLogs = fs.existsSync(logFilePath) ? JSON.parse(fs.readFileSync(logFilePath)) : [];
-
-    // Append the new log entry
-    existingLogs.push(logEntry);
-
-    // Write the updated logs back to the file
-    fs.writeFileSync(logFilePath, JSON.stringify(existingLogs, null, 2));
 };
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        logActivity('ERROR', 'Invalid request method for recording feedback', { method: req.method });
+        await logActivity('ERROR', 'Invalid request method for recording feedback', { method: req.method });
         return res.status(405).json({ message: 'Method not allowed' });
     }
 
@@ -39,7 +33,7 @@ export default async function handler(req, res) {
     const user = verifyToken(req);
 
     if (!user) {
-        logActivity('FAILURE', 'Unauthorized feedback submission attempt');
+        await logActivity('FAILURE', 'Unauthorized feedback submission attempt');
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -58,18 +52,19 @@ export default async function handler(req, res) {
             }]);
 
         if (error) {
-            logActivity('ERROR', 'Database insertion error during feedback recording', { error });
+            await logActivity('ERROR', 'Database insertion error during feedback recording', { error });
             throw error;
         }
 
-        logActivity('SUCCESS', 'Feedback recorded successfully', { userId: user.userId });
+        await logActivity('SUCCESS', 'Feedback recorded successfully', { userId: user.userId });
         res.status(200).json({ message: 'Feedback recorded successfully', data });
     } catch (error) {
-        logActivity('ERROR', 'An error occurred during feedback submission', { error: error.message });
-        console.log(error);
+        await logActivity('ERROR', 'An error occurred during feedback submission', { error: error.message });
+        console.error(error);
         res.status(400).json({ message: error.message });
     }
 }
+
 
 
 

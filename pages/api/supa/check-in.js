@@ -1,46 +1,40 @@
 import { createClient } from '@supabase/supabase-js'
 import { verifyToken } from '@/utils/auth'
-import fs from 'fs'
-import path from 'path'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 
-// Logging function to write logs to a JSON file
-const logActivity = (logType, message, additionalInfo = {}) => {
+// Logging function to write logs to Supabase
+const logActivity = async (logType, message, additionalInfo = {}) => {
     const logEntry = {
         timestamp: new Date().toISOString(),
-        logType,
+        log_type: logType,
         message,
-        ...additionalInfo
+        additional_info: additionalInfo
     };
 
-    const logFilePath = path.join(process.cwd(), 'logs', 'checkInLogs.json');
+    try {
+        const { error } = await supabase
+            .from('canvassers_checkin_logs')
+            .insert([logEntry]);
 
-    // Ensure the logs directory exists
-    if (!fs.existsSync(path.dirname(logFilePath))) {
-        fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
+        if (error) {
+            console.error('Error inserting log:', error);
+        }
+    } catch (err) {
+        console.error('Error logging activity:', err);
     }
-
-    // Read existing logs
-    const existingLogs = fs.existsSync(logFilePath) ? JSON.parse(fs.readFileSync(logFilePath)) : [];
-
-    // Append the new log entry
-    existingLogs.push(logEntry);
-
-    // Write the updated logs back to the file
-    fs.writeFileSync(logFilePath, JSON.stringify(existingLogs, null, 2));
 };
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        logActivity('ERROR', 'Invalid request method for check-in', { method: req.method });
+        await logActivity('ERROR', 'Invalid request method for check-in', { method: req.method });
         return res.status(405).json({ message: 'Method not allowed' });
     }
 
     try {
         const user = verifyToken(req);
         if (!user) {
-            logActivity('FAILURE', 'Unauthorized check-in attempt');
+            await logActivity('FAILURE', 'Unauthorized check-in attempt');
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
@@ -62,18 +56,19 @@ export default async function handler(req, res) {
             ]);
 
         if (error) {
-            logActivity('ERROR', 'Database insertion error during check-in', { error });
+            await logActivity('ERROR', 'Database insertion error during check-in', { error });
             throw error;
         }
 
-        logActivity('SUCCESS', 'User checked in successfully', { userId: user.userId, name, email });
+        await logActivity('SUCCESS', 'User checked in successfully', { userId: user.userId, name, email });
         res.status(200).json({ message: 'Checked in successfully' });
     } catch (error) {
-        logActivity('ERROR', 'An error occurred during check-in', { error: error.message, userId: user.userId, name, email });
+        await logActivity('ERROR', 'An error occurred during check-in', { error: error.message });
         console.error('Check-in error:', error);
         res.status(500).json({ message: 'An error occurred during check-in' });
     }
 }
+
 
 
 
