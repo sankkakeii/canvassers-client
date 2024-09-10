@@ -10,6 +10,7 @@ import SalesChart from '@/components/admin-components/SalesChart';
 import UserSalesChart from '@/components/admin-components/UserSalesChart';
 import SalesOverTimeChart from '@/components/admin-components/SalesOverTimeChart';
 import CheckinDataComponent from '@/components/updated/CheckinComponent';
+import FeedbackComponent from '@/components/updated/FeedbackComponent';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -113,19 +114,14 @@ const AdminApp = () => {
     const [message, setMessage] = useState('');
     const [selectedBranch, setSelectedBranch] = useState('');
     const [userSearch, setUserSearch] = useState('');
-    const [checkInSearch, setCheckInSearch] = useState('');
-    const [saleSearch, setSaleSearch] = useState('');
     const [userFilter, setUserFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [activeSection, setActiveSection] = useState('Overview');
-    const [feedbackData, setFeedbackData] = useState([]);
     const API_URL = '/api';
 
     useEffect(() => {
         fetchUsers();
         fetchCheckIns();
-        fetchSales();
-        fetchFeedback();
     }, []);
 
     const fetchUsers = async () => {
@@ -160,37 +156,6 @@ const AdminApp = () => {
         }
     };
 
-    const fetchFeedback = async () => {
-        try {
-            const response = await fetch(`${API_URL}/supa/admin/fetch-all-feedbacks`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (!response.ok) throw new Error('Failed to fetch check-ins');
-            const data = await response.json();
-            setFeedbackData(data);
-        } catch (error) {
-            console.error('Error fetching check-ins:', error);
-            setMessage('Error fetching check-ins');
-        }
-    };
-
-    const fetchSales = async () => {
-        try {
-            const response = await fetch(`${API_URL}/supa/admin/fetch-all-sales`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (!response.ok) throw new Error('Failed to fetch sales');
-            const data = await response.json();
-            setSales(data);
-        } catch (error) {
-            console.error('Error fetching sales:', error);
-            setMessage('Error fetching sales');
-        }
-    };
 
     const updateUserStatus = async (userId, active) => {
         try {
@@ -216,10 +181,6 @@ const AdminApp = () => {
         updateUserStatus(user.id, active ? 0 : 1);
     };
 
-    const getUserById = (id) => {
-        return users.find(user => user.id === id);
-    };
-
     const getPageData = (data, page) => {
         const startIndex = (page - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -232,26 +193,7 @@ const AdminApp = () => {
         (userFilter === 'all' || (userFilter === 'active' && user.active) || (userFilter === 'inactive' && !user.active))
     );
 
-    const filteredCheckIns = checkIns.filter(checkIn =>
-        // checkIn?.location?.toLowerCase().includes(checkInSearch.toLowerCase()) ||
-        checkIn?.branch?.toLowerCase().includes(checkInSearch.toLowerCase())
-    ).reduce((acc, checkIn) => {
-        const existing = acc.find(item => item.user_id === checkIn.user_id);
-        if (existing) {
-            existing.check_in_time = new Date(Math.min(new Date(existing.check_in_time), new Date(checkIn.check_in_time))).toLocaleString();
-        } else {
-            acc.push({ ...checkIn, check_in_time: new Date(checkIn.check_in_time).toLocaleString() });
-        }
-        return acc;
-    }, []);
-
-    const filteredSales = sales.filter(sale =>
-        sale.id.toString().toLowerCase().includes(saleSearch.toLowerCase())
-    );
-
     const userPageData = getPageData(filteredUsers, currentPage);
-    const checkInPageData = getPageData(filteredCheckIns, currentPage);
-    const salesPageData = getPageData(filteredSales, currentPage);
 
     const renderContent = () => {
         switch (activeSection) {
@@ -321,146 +263,11 @@ const AdminApp = () => {
                 );
             case 'Check-Ins':
                 return (
-                    // <div>
-                    //     <h2 className="text-xl font-semibold mb-2">Check-Ins</h2>
-                    //     <Input
-                    //         placeholder="Search check-ins..."
-                    //         value={checkInSearch}
-                    //         onChange={(e) => setCheckInSearch(e.target.value)}
-                    //         className="max-w-sm mb-4"
-                    //     />
-                    //     <div className="overflow-x-auto">
-                    //         <table className="w-full table-auto border-collapse border border-gray-200">
-                    //             <thead>
-                    //                 <tr className="bg-gray-200">
-                    //                     <th className="border p-2 text-left">Check-In Time</th>
-                    //                     <th className="border p-2 text-left">User ID</th>
-                    //                     <th className="border p-2 text-left">User Name</th>
-                    //                     <th className="border p-2 text-left">Location</th>
-                    //                     <th className="border p-2 text-left">Branch</th>
-                    //                 </tr>
-                    //             </thead>
-                    //             <tbody>
-                    //                 {checkInPageData.map(checkIn => {
-                    //                     const user = getUserById(checkIn.user_id);
-                    //                     return (
-                    //                         <tr key={checkIn.id} className="hover:bg-gray-100">
-                    //                             <td className="border p-2">{checkIn.check_in_time}</td>
-                    //                             <td className="border p-2">{checkIn.user_id}</td>
-                    //                             <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
-                    //                             <td className="border p-2">{checkIn.location}</td>
-                    //                             <td className="border p-2">{checkIn.branch}</td>
-                    //                         </tr>
-                    //                     );
-                    //                 })}
-                    //             </tbody>
-                    //         </table>
-                    //         <Pagination
-                    //             currentPage={currentPage}
-                    //             totalItems={filteredCheckIns.length}
-                    //             itemsPerPage={ITEMS_PER_PAGE}
-                    //             onPageChange={setCurrentPage}
-                    //         />
-                    //     </div>
-                    //     <CheckInChart checkIns={filteredCheckIns} />
-                    // </div>
-
                     <CheckinDataComponent />
                 );
-            case 'Sales':
-                return (<div>
-                    <h2 className="text-xl font-semibold mb-2">Sales</h2>
-                    <Input
-                        placeholder="Search sales..."
-                        value={saleSearch}
-                        onChange={(e) => setSaleSearch(e.target.value)}
-                        className="max-w-sm mb-4"
-                    />
-                    <div className="overflow-x-auto">
-                        <table className="w-full table-auto border-collapse border border-gray-200">
-                            <thead>
-                                <tr className="bg-gray-200">
-                                    <th className="border p-2 text-left">Sale Time</th>
-                                    <th className="border p-2 text-left">User ID</th>
-                                    <th className="border p-2 text-left">User Name</th>
-                                    <th className="border p-2 text-left">Customer Name</th>
-                                    <th className="border p-2 text-left">Customer Phone</th>
-                                    <th className="border p-2 text-left">AXA Insurance Card</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {salesPageData.map(sale => {
-                                    const user = getUserById(sale.user_id);
-                                    return (
-                                        <tr key={sale.id} className="hover:bg-gray-100">
-                                            <td className="border p-2">{new Date(sale.created_at).toLocaleString()}</td>
-                                            <td className="border p-2">{sale.user_id}</td>
-                                            <td className="border p-2">{user ? user.name : 'Unknown User'}</td>
-                                            <td className="border p-2">{sale.customer_name}</td>
-                                            <td className="border p-2">{sale.customer_phone}</td>
-                                            <td className="border p-2">{sale.axa_insurance_card_serial}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                        <Pagination
-                            currentPage={currentPage}
-                            totalItems={filteredSales.length}
-                            itemsPerPage={ITEMS_PER_PAGE}
-                            onPageChange={setCurrentPage}
-                        />
-                    </div>
-                    <SalesOverTimeChart sales={sales} />
-                    <UserSalesChart sales={sales} users={filteredUsers} />
-                    {/* <SalesChart sales={sales} /> */}
-                </div>
-            );
             case 'Feedback':
                 return (
-                    <div>
-                        <h2 className="text-xl font-semibold mb-2">Feedback Data</h2>
-                        {/* <div className="mb-4 flex gap-4">
-                            <Input
-                                placeholder="Search users..."
-                                value={userSearch}
-                                onChange={(e) => setUserSearch(e.target.value)}
-                                className="max-w-sm"
-                            />
-                        </div> */}
-                        <div className="overflow-x-auto">
-                            <table className="w-full table-auto border-collapse border border-gray-200">
-                                <thead>
-                                    <tr className="bg-gray-200">
-                                        <th className="border p-2 text-left">Name</th>
-                                        <th className="border p-2 text-left">sales</th>
-                                        <th className="border p-2 text-left">Reason</th>
-                                        <th className="border p-2 text-left">Improvement</th>
-                                        <th className="border p-2 text-left">Extra Feedback</th>
-                                        <th className="border p-2 text-left">Slot Location</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {feedbackData.map(feedback => (
-                                        <tr key={feedback.id} className="hover:bg-gray-100">
-                                            <td className="border p-2">{feedback.name}</td>
-                                            <td className="border p-2">{feedback.sales}</td>
-                                            <td className="border p-2">{feedback.reason}</td>
-                                            <td className="border p-2">{feedback.improvement}</td>
-                                            <td className="border p-2">{feedback.extra_feedback}</td>
-                                            <td className="border p-2">{feedback.slot_location}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <Pagination
-                                currentPage={currentPage}
-                                totalItems={feedbackData.length}
-                                itemsPerPage={ITEMS_PER_PAGE}
-                                onPageChange={setCurrentPage}
-                            />
-                        </div>
-                    </div>
+                    <FeedbackComponent />
                 );
             default:
             return <div>Select a section from the sidebar</div>;
