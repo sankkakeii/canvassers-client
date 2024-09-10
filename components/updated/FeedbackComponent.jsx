@@ -52,6 +52,34 @@ const FeedbackComponent = () => {
     const filterFeedbackData = () => {
         let filteredData = feedbackData;
 
+        // Filter by date
+        if (dateFilter) {
+            filteredData = filteredData.filter(
+                (feedback) =>
+                    new Date(feedback.created_at).toLocaleDateString() === new Date(dateFilter).toLocaleDateString()
+            );
+
+            // Remove duplicate feedback entries by text for each user after date filter is applied
+            const uniqueFeedback = [];
+            const userFeedbackMap = new Map();
+
+            filteredData.forEach(feedback => {
+                const userId = feedback.user_id;
+                const feedbackText = `${feedback.reason}-${feedback.improvement}-${feedback.extra_feedback}`;
+
+                if (!userFeedbackMap.has(userId)) {
+                    userFeedbackMap.set(userId, new Set());
+                }
+
+                if (!userFeedbackMap.get(userId).has(feedbackText)) {
+                    userFeedbackMap.get(userId).add(feedbackText);
+                    uniqueFeedback.push(feedback);
+                }
+            });
+
+            filteredData = uniqueFeedback;
+        }
+
         // Filter by user name or email
         if (userSearch) {
             filteredData = filteredData.filter((feedback) => {
@@ -64,14 +92,6 @@ const FeedbackComponent = () => {
         if (selectedBranch) {
             filteredData = filteredData.filter(feedback =>
                 feedback.slot_location && feedback.slot_location.toLowerCase().includes(selectedBranch.toLowerCase())
-            );
-        }
-
-        // Filter by date
-        if (dateFilter) {
-            filteredData = filteredData.filter(
-                (feedback) =>
-                    new Date(feedback.created_at).toLocaleDateString() === new Date(dateFilter).toLocaleDateString()
             );
         }
 

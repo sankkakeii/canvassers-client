@@ -50,43 +50,6 @@ const CheckinDataComponent = () => {
 
     const getUserById = (id) => users.find((user) => user.id === id);
 
-    // const filterCheckIns = () => {
-    //     let filteredData = checkIns;
-
-    //     if (checkInSearch) {
-    //         filteredData = filteredData.filter((checkIn) =>
-    //             checkIn.branch?.toLowerCase().includes(checkInSearch.toLowerCase())
-    //         );
-    //     }
-
-    //     if (nameSearch) {
-    //         filteredData = filteredData.filter((checkIn) => {
-    //             const user = getUserById(checkIn.user_id);
-    //             return user && user.name.toLowerCase().includes(nameSearch.toLowerCase());
-    //         });
-    //     }
-
-    //     if (dateFilter) {
-    //         filteredData = filteredData.filter(
-    //             (checkIn) =>
-    //                 new Date(checkIn.check_in_time).toLocaleDateString() ===
-    //                 new Date(dateFilter).toLocaleDateString()
-    //         );
-    //     }
-
-    //     return filteredData.reduce((acc, checkIn) => {
-    //         const existing = acc.find((item) => item.user_id === checkIn.user_id);
-    //         if (existing) {
-    //             existing.check_in_time = new Date(
-    //                 Math.min(new Date(existing.check_in_time), new Date(checkIn.check_in_time))
-    //             ).toLocaleString();
-    //         } else {
-    //             acc.push({ ...checkIn, check_in_time: new Date(checkIn.check_in_time).toLocaleString() });
-    //         }
-    //         return acc;
-    //     }, []);
-    // };
-
     const filterCheckIns = () => {
         let filteredData = checkIns;
 
@@ -114,16 +77,30 @@ const CheckinDataComponent = () => {
             );
         }
 
-        // Format the data to make it more human-readable
-        return filteredData.map((checkIn) => ({
-            ...checkIn,
-            check_in_time: new Date(checkIn.check_in_time).toLocaleString(), // Format check-in time
-            location: checkIn.location || 'Unknown Location', // Ensure location is displayed properly
-            branch: checkIn.branch || 'Unknown Branch', // Ensure branch is displayed properly
-        }));
+        // Group check-ins by user and date, and select the earliest check-in for each user per date
+        const earliestCheckIns = {};
+        filteredData.forEach((checkIn) => {
+            const userId = checkIn.user_id;
+            const dateKey = new Date(checkIn.check_in_time).toLocaleDateString();
+            const key = `${userId}-${dateKey}`;
+
+            if (!earliestCheckIns[key]) {
+                earliestCheckIns[key] = checkIn;
+            } else if (new Date(checkIn.check_in_time) < new Date(earliestCheckIns[key].check_in_time)) {
+                earliestCheckIns[key] = checkIn;
+            }
+        });
+
+        // Return the filtered check-ins sorted by check-in time
+        return Object.values(earliestCheckIns)
+            .map((checkIn) => ({
+                ...checkIn,
+                check_in_time: new Date(checkIn.check_in_time).toLocaleString(), // Format check-in time
+                location: checkIn.location || 'Unknown Location', // Ensure location is displayed properly
+                branch: checkIn.branch || 'Unknown Branch', // Ensure branch is displayed properly
+            }))
+            .sort((a, b) => new Date(a.check_in_time) - new Date(b.check_in_time)); // Sort by check-in time
     };
-
-
 
     const filteredCheckIns = filterCheckIns();
 
@@ -151,6 +128,14 @@ const CheckinDataComponent = () => {
                     className="max-w-sm"
                 />
             </div>
+
+            {/* Check-In Tally */}
+            <div className="mb-4">
+                <p className="text-lg font-medium">
+                    Total Check-Ins: {filteredCheckIns.length}
+                </p>
+            </div>
+
             <div className="overflow-x-auto border rounded-lg shadow-sm">
                 {message && <p className="text-red-500 mb-4">{message}</p>}
                 <table className="w-full border-collapse table-auto">
