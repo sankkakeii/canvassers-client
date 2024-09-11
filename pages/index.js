@@ -577,10 +577,6 @@ const CanvasserApp = () => {
         onClick={() => setShowTutorial(true)}
       />
 
-      {/* <X
-        className="absolute top-3 right-3 text-red-500 text-2xl cursor-pointer"
-        onClick={() => handleCheckOut}
-      /> */}
 
       {showTutorial && (
         <motion.div

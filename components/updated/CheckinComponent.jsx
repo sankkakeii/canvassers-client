@@ -130,8 +130,8 @@ const CheckinDataComponent = () => {
             </div>
 
             {/* Check-In Tally */}
-            <div className="mb-4">
-                <p className="text-lg font-medium">
+            <div className="mb-4 bg-gray-200 p-4 rounded-lg w-fit">
+                <p className="text-2xl font-medium text-green-600">
                     Total Check-Ins: {filteredCheckIns.length}
                 </p>
             </div>
