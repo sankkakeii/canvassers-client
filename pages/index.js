@@ -128,45 +128,116 @@ const CanvasserApp = () => {
     }
   };
 
+  // const handleCheckIn = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     const checkinLocation = JSON.stringify(location);
+
+  //     const selectedBranch = branches.find(branch => branch.address === user.slot_location);
+  //     if (!selectedBranch) throw new Error('No matching branch found for your slot location');
+
+  //     const distance = getDistanceFromLatLonInMeters(location.latitude, location.longitude, selectedBranch.lat, selectedBranch.long);
+  //     const isWithin400Meters = distance <= 400;
+
+  //     const response = await fetch(`${API_URL}/supa/check-in`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({
+  //         name: user.name,
+  //         email: user.email,
+  //         location: checkinLocation,
+  //         branch: selectedBranch,
+  //         isWithin400Meters,
+  //         distanceToBranch: distance
+  //       }),
+  //     });
+
+  //     if (!response.ok) throw new Error('Check-in failed');
+
+  //     const data = await response.json();
+  //     setIsCheckedIn(true);
+  //     setMessage(data.message);
+  //   } catch (error) {
+  //     setMessage('Check-in failed. Please try again.');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+
   const handleCheckIn = async () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const checkinLocation = JSON.stringify(location);
-
-      const selectedBranch = branches.find(branch => branch.address === user.slot_location);
-      if (!selectedBranch) throw new Error('No matching branch found for your slot location');
-
-      const distance = getDistanceFromLatLonInMeters(location.latitude, location.longitude, selectedBranch.lat, selectedBranch.long);
-      const isWithin400Meters = distance <= 400;
-
-      const response = await fetch(`${API_URL}/supa/check-in`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      
+      // Check if location services are available
+      if (!navigator.geolocation) {
+        setMessage('Geolocation is not supported by your browser.');
+        setIsLoading(false);
+        return;
+      }
+  
+      // Request location permission and get the user's location
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const location = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+          const checkinLocation = JSON.stringify(location);
+  
+          const selectedBranch = branches.find(branch => branch.address === user.slot_location);
+          if (!selectedBranch) throw new Error('No matching branch found for your slot location');
+  
+          const distance = getDistanceFromLatLonInMeters(location.latitude, location.longitude, selectedBranch.lat, selectedBranch.long);
+          const isWithin400Meters = distance <= 400;
+  
+          const response = await fetch(`${API_URL}/supa/check-in`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              name: user.name,
+              email: user.email,
+              location: checkinLocation,
+              branch: selectedBranch,
+              isWithin400Meters,
+              distanceToBranch: distance
+            }),
+          });
+  
+          if (!response.ok) throw new Error('Check-in failed');
+  
+          const data = await response.json();
+          setIsCheckedIn(true);
+          setIsLoading(false);
+          setMessage(data.message);
         },
-        body: JSON.stringify({
-          name: user.name,
-          email: user.email,
-          location: checkinLocation,
-          branch: selectedBranch,
-          isWithin400Meters,
-          distanceToBranch: distance
-        }),
-      });
-
-      if (!response.ok) throw new Error('Check-in failed');
-
-      const data = await response.json();
-      setIsCheckedIn(true);
-      setMessage(data.message);
+        (error) => {
+          // Handle errors related to location permission
+          if (error.code === error.PERMISSION_DENIED) {
+            setIsLoading(false);
+            setMessage('Please allow location access to proceed.');
+          } else {
+            setIsLoading(false);
+            setMessage('Failed to retrieve location. Please try again.');
+          }
+          setIsLoading(false);
+        }
+      );
     } catch (error) {
       setMessage('Check-in failed. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };
+
+  
 
   const handleCheckOut = async () => {
     if (!isFeedbackSubmitted) {
